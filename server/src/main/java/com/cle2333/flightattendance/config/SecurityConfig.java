@@ -53,9 +53,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     // 旧版 admin 接口全裸奔（与原 Node.js 后端行为一致 —— 见 README 安全说明）
                     .requestMatchers("/api/admin/**").permitAll()
-                    // 静态资源
-                    .requestMatchers("/", "/index.html", "/admin.html",
-                            "/favicon.ico", "/assets/**", "/static/**").permitAll()
+                    // 静态资源 / favicon
+                    .requestMatchers("/", "/favicon.ico", "/assets/**", "/static/**").permitAll()
                     // 其他 /api/** 需要 JWT
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().permitAll()

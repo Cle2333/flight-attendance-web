@@ -40,3 +40,8 @@ logs/
 application-local.yml
 application-local.*.yml
 .env
+
+### H2 file-mode dev data ###
+data/
+*.mv.db
+*.trace.db

@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * ⚠️ 安全说明（与原 Node.js 后端行为一致 —— 详见 README）：
- * 旧版 admin 路由没有任何鉴权（admin.html 里的"登录"是纯前端校验）。
- * 这里的实现沿用了同样的策略，以便现有 admin.html 不需要改动。
- * 上线前应在此处加鉴权（Basic Auth / 单独 JWT / 内网白名单）。
+ * ⚠️ 安全说明（详见 README）：
+ * 这里保留了 Node.js 版 admin 路由的"无鉴权"行为，只是为了 API 兼容。
+ * 上线前应在此处加鉴权（Basic Auth / 单独 JWT / 内网白名单），
+ * 否则任何人能读全量用户、删除账号、查看完整打卡记录。
  */
 @RestController
 @RequestMapping("/api/admin")

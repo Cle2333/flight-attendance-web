@@ -24,4 +24,3 @@ app:
     expiration-hours: ${JWT_EXPIRATION_HOURS:168}
   admin:
     password: ${ADMIN_PASSWORD:admin123}
-  static-dir: ${STATIC_DIR:..}
