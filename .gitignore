@@ -4,16 +4,3 @@ server/data/
 .env
 .DS_Store
 Thumbs.db
-
-# 旧文件
-app-new.html
-app.js
-index-old.html
-styles.css
-demo/
-
-# Capacitor Android构建产物
-android/app/build/
-android/.gradle/
-android/build/
-android/local.properties

@@ -1,0 +1,125 @@
+name: Build
+
+on:
+  push:
+    branches: [master, main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============== Server (Spring Boot) ==============
+  server:
+    name: Server (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      - name: Build & test
+        working-directory: server
+        run: mvn -B verify
+
+      - name: Package JAR
+        working-directory: server
+        run: mvn -B -DskipTests package
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-jar
+          path: server/target/flight-attendance-server.jar
+          retention-days: 30
+
+  # ============== App (Flutter Android) ==============
+  analyze:
+    name: App · analyze & test
+    runs-on: ubuntu-latest
+    needs: [server]   # server 失败就跳过 app，节省 CI
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Test
+        working-directory: app
+        run: flutter test
+
+  build-apk:
+    name: App · build APK
+    needs: [analyze]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: Decode release keystore (if provided)
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p app/android/app/keystore
+          echo "$KEYSTORE_BASE64" | base64 -d > app/android/app/keystore/release.jks
+          cat > app/android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=keystore/release.jks
+          EOF
+
+      - name: Build release APK
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload mapping (for crash deobfuscation)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-mapping
+        path: app/build/app/outputs/mapping/release/mapping.txt
+        if-no-files-found: ignore
+        retention-days: 90

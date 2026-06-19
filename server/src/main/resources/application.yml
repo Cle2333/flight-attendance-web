@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: flight-attendance
+  profiles:
+    active: dev
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+
+logging:
+  level:
+    root: INFO
+    com.cle2333.flightattendance: DEBUG
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-please-change-this-in-production-it-must-be-at-least-32-chars-long-for-hs256}
+    expiration-hours: ${JWT_EXPIRATION_HOURS:168}
+  admin:
+    password: ${ADMIN_PASSWORD:admin123}
+  static-dir: ${STATIC_DIR:..}

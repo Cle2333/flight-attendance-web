@@ -2,151 +2,221 @@
 
 一个有趣的生活记录应用，用"起飞"来记录你的每一次重要时刻。
 
+> **状态：前端已迁移至 Flutter**（`app/`），后端已迁移至 **Spring Boot + MariaDB**（`server/`）。
+>
+> 旧的 `index.html` / `admin.html` 仍然存在于仓库根目录，仅作历史参考 —— 它们**已不再维护**。Spring Boot 同时会把它们作为静态资源 serve 出去（用同一个端口），所以 `admin.html` 仍然可用。Flutter App 不再使用它们。
+
 ## 功能特性
 
-- **双击起飞** - 双击屏幕即可打卡，带粒子特效
-- **起飞记录** - 日历视图查看历史记录，支持周/月切换
-- **起飞感受** - 打卡后可选择感受或自定义填写
-- **排行榜** - 查看自己和朋友的起飞次数
-- **个人设置** - 自定义昵称、头像、计时精度、起飞特效、机长语录
-- **云端同步** - 登录账号后数据自动同步到服务器
-- **本地模式** - 无需登录，数据保存在浏览器本地
-- **后台管理** - 管理员可查看统计数据和管理用户
+- **双击起飞** — 双击屏幕即可打卡，带粒子特效
+- **起飞记录** — 日历视图查看历史记录，支持周/月切换
+- **起飞感受** — 打卡后可选择感受或自定义填写
+- **排行榜** — 查看自己和朋友的起飞次数
+- **个人设置** — 自定义昵称、头像、计时精度、起飞特效、机长语录
+- **云端同步** — 登录账号后数据自动同步到服务器
+- **本地模式** — 无需登录，数据保存在设备本地
+- **后台管理（web）** — 管理员可查看统计数据和管理用户（沿用旧 `admin.html`）
 
 ## 技术栈
 
-- **前端**: 纯 HTML/CSS/JavaScript（无框架依赖）
-- **后端**: Node.js + Express
-- **数据库**: JSON 文件存储
-- **认证**: JWT Token
+- **前端（App）**：Flutter 3.44+，GetX 状态管理 + 路由
+- **后端**：Spring Boot 3.3 + Java 17 + Spring Data JPA + Spring Security（仅 BCrypt + JWT 过滤器）
+- **数据库**：MariaDB 10.5+（本地开发可用 docker compose 一键起）
+- **迁移**：Flyway
+- **认证**：JWT (jjwt 0.12)
+- **CI**：GitHub Actions（同时构建 Spring Boot JAR 和 Flutter APK）
+
+## 目录结构
+
+```
+flight-attendance-web/
+├── app/                  # Flutter 前端
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── app.dart
+│   │   ├── api/          # HTTP 客户端
+│   │   ├── models/
+│   │   ├── screens/      # 登录 / 首页 / 记录 / 排行 / 我的
+│   │   ├── state/        # AppState (GetxController)
+│   │   ├── storage/      # SharedPreferences 封装
+│   │   ├── theme/
+│   │   ├── utils/
+│   │   └── widgets/      # 粒子 / 日历 / 起飞遮罩 / 选择器
+│   ├── android/
+│   ├── pubspec.yaml
+│   └── ...
+├── server/               # Spring Boot 后端
+│   ├── pom.xml
+│   ├── Dockerfile
+│   ├── docker-compose.yml # 本地起 MariaDB
+│   ├── src/main/java/com/cle2333/flightattendance/
+│   │   ├── FlightAttendanceApplication.java
+│   │   ├── config/        # SecurityConfig, StaticResourceConfig
+│   │   ├── controller/    # Auth/User/Record/Settings/Admin/Test
+│   │   ├── dto/
+│   │   ├── entity/        # User, Record, Settings
+│   │   ├── exception/
+│   │   ├── repository/
+│   │   ├── security/      # JwtTokenProvider, JwtAuthenticationFilter
+│   │   └── service/
+│   ├── src/main/resources/
+│   │   ├── application.yml        # 公共配置
+│   │   ├── application-dev.yml    # 默认 profile，连 MariaDB
+│   │   ├── application-prod.yml   # 生产 profile
+│   │   ├── application-test.yml   # H2，集成测试用
+│   │   └── db/migration/V1__init.sql
+│   └── src/test/java/...
+├── .github/workflows/
+│   └── build.yml          # CI: server JAR + app APK
+├── admin.html             # ⚠️ 旧 web 后台（Spring Boot 仍会 serve）
+├── index.html             # ⚠️ 旧 web 前端（仅参考）
+└── README.md
+```
 
 ## 快速开始
 
-### 1. 安装依赖
+### 1. 启动 MariaDB
+
+最方便是用项目自带的 `docker-compose.yml`：
 
 ```bash
 cd server
-npm install
+docker compose up -d
+# 等待 healthcheck 通过（约 5-10 秒）
 ```
 
-### 2. 启动服务器
+手动安装的 MariaDB 也可以，创建一个 `flight_attendance` 库即可。
+
+### 2. 启动后端
 
 ```bash
-node index.js
+cd server
+./mvnw spring-boot:run
+# 或
+./mvnw -DskipTests package && java -jar target/flight-attendance-server.jar
 ```
 
-服务器默认运行在 `http://localhost:8080`
+默认监听 `http://localhost:8080`：
 
-### 3. 访问应用
+- API 根：`http://localhost:8080/api/`
+- 测试：`curl http://localhost:8080/api/test`
+- 旧 web 前台：`http://localhost:8080/index.html`（已废弃）
+- 旧 web 后台：`http://localhost:8080/admin.html`（默认密码 `admin123`）
 
-- **前台**: http://localhost:8080
-- **后台管理**: http://localhost:8080/admin.html（默认密码: admin123）
+第一次启动会自动跑 Flyway 迁移（`V1__init.sql`），建好三张表。
 
-## 部署到服务器
-
-### 方案一：云服务器部署
-
-#### 1. 购买云服务器
-
-推荐阿里云、腾讯云等平台，1核2G配置即可。
-
-#### 2. 安装 Node.js
+### 3. 运行 Flutter 前端
 
 ```bash
-# Ubuntu/Debian
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# CentOS/RHEL
-curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-sudo yum install -y nodejs
+cd app
+flutter pub get
+flutter run
 ```
 
-#### 3. 上传项目
+### 4. 在 App 内配置后端地址
+
+App 启动后：
+
+- 登录页右上角 ⚙️ 打开"服务器设置"
+- Android **模拟器**：填 `http://10.0.2.2:8080`
+- Android **真机**：填运行后端的机器的局域网 IP，例如 `http://192.168.1.100:8080`
+
+也可用 `--dart-define` 在启动时设置：
 
 ```bash
-# 在本地打包
-cd attendance-web
-tar -czf attendance-web.tar.gz --exclude=node_modules --exclude=server/data .
-
-# 上传到服务器
-scp attendance-web.tar.gz root@your-server-ip:/var/www/
-
-# 在服务器上解压
-ssh root@your-server-ip
-cd /var/www
-tar -xzf attendance-web.tar.gz
+flutter run --dart-define=API_BASE_URL=http://192.168.1.100:8080
 ```
 
-#### 4. 安装依赖并启动
+## API 接口
+
+后端 API 与原 Node.js 版**完全一致**，Flutter 前端无需改动：
+
+- `POST /api/auth/register` — 注册
+- `POST /api/auth/login` — 登录
+- `GET  /api/user/profile` — 获取用户信息（需鉴权）
+- `PUT  /api/user/profile` — 更新用户信息（需鉴权）
+- `GET  /api/records` — 列出所有打卡记录（需鉴权）
+- `POST /api/records` — 新增打卡记录（需鉴权）
+- `PUT  /api/records/:id` — 更新打卡记录（需鉴权）
+- `DELETE /api/records/:id` — 删除打卡记录（需鉴权）
+- `POST /api/records/sync` — 同步本地记录到云端（需鉴权）
+- `GET  /api/settings` — 获取用户设置（需鉴权）
+- `PUT  /api/settings` — 更新用户设置（需鉴权）
+- `GET  /api/admin/leaderboard?type=week|all` — 排行榜
+- `GET  /api/admin/stats` — 管理员统计
+
+统一响应包络：
+```json
+{ "success": true,  "data": { ... } }
+{ "success": false, "message": "错误说明" }
+```
+
+## ⚠️ 安全说明
+
+**`/api/admin/**` 当前没有任何鉴权**。这是为了和原 Node.js 后端行为完全一致（`admin.html` 里的"登录"是纯前端校验，admin 路由在 Node 端也没有鉴权）。
+
+生产环境**必须**在 `AdminController` 加鉴权，可选方案：
+- HTTP Basic Auth（最简单）
+- 单独的 admin JWT（`/api/auth/admin-login` 返回带 `role: admin` 的 token）
+- 内网白名单（`SecurityConfig` 里按 IP 放行 `/api/admin/**`）
+
+> 相关的 issue / PR 跟踪中。
+
+## 配置项
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `SERVER_PORT` | 8080 | HTTP 端口 |
+| `DB_URL` | `jdbc:mariadb://localhost:3306/flight_attendance?...` | JDBC URL |
+| `DB_USER` | `flight` | 数据库用户 |
+| `DB_PASSWORD` | `flight` | 数据库密码 |
+| `JWT_SECRET` | 占位（dev 提示） | JWT 签名密钥，**生产必改 ≥32 字符随机** |
+| `JWT_EXPIRATION_HOURS` | 168 | token 有效期（小时） |
+| `ADMIN_PASSWORD` | `admin123` | 旧 `admin.html` 前端校验使用 |
+| `STATIC_DIR` | `..` | 静态资源根目录（serve 旧 `index.html` / `admin.html`） |
+| `SPRING_PROFILES_ACTIVE` | `dev` | 当前 profile：dev / prod / test |
+
+全部都可用环境变量注入，遵循 Spring Boot 标准 relaxed binding（`SPRING_DATASOURCE_URL` 或 `DB_URL` 都行）。
+
+## 构建 / CI
+
+### 本地构建
 
 ```bash
-cd /var/www/server
-npm install
+# 后端
+cd server
+./mvnw -DskipTests package
+# 产物：target/flight-attendance-server.jar （fat jar，约 55MB）
 
-# 使用 PM2 管理进程
-npm install -g pm2
-pm2 start index.js --name attendance-web
-pm2 save
-pm2 startup
+# 前端 APK —— 见 app/README
 ```
 
-#### 5. 配置域名（可选）
-
-购买域名后，在域名管理后台添加 A 记录指向服务器 IP。
-
-### 方案二：宝塔面板部署
-
-1. 安装宝塔面板：https://www.bt.cn/
-2. 通过宝塔安装 Node.js 环境
-3. 上传项目文件
-4. 使用 PM2 启动应用
-5. 配置反向代理（如需域名访问）
-
-### 方案三：Docker 部署
+### Docker
 
 ```bash
-# 构建镜像
-docker build -t attendance-web .
-
-# 运行容器
-docker run -d -p 8080:8080 --name attendance-web attendance-web
+cd server
+docker build -t flight-attendance-server .
+docker run --rm -p 8080:8080 \
+  -e DB_URL=jdbc:mariadb://host.docker.internal:3306/flight_attendance \
+  -e DB_USER=flight -e DB_PASSWORD=flight \
+  -e JWT_SECRET=$(openssl rand -hex 32) \
+  flight-attendance-server
 ```
 
-## 环境变量
+### GitHub Actions
 
-可以在 `server/index.js` 中修改以下配置：
+`.github/workflows/build.yml` 会：
 
-```javascript
-const PORT = 8080;           // 服务器端口
-const JWT_SECRET = 'your-secret-key';  // JWT 密钥（建议修改）
-const ADMIN_PASSWORD = 'admin123';     // 管理员密码（建议修改）
-```
+1. **Server job**：Maven 跑 `verify` + `package`，上传 `server-jar` artifact
+2. **App job**（依赖 server 成功）：Flutter `analyze` + `test` + `build apk --release`，上传 `app-release` + `app-mapping` artifacts
 
-## 项目结构
+触发条件：push 到 `master`/`main`、打 `v*` tag、PR、手动触发。
 
-```
-attendance-web/
-├── index.html          # 前端主页面
-├── admin.html          # 后台管理页面
-├── server/
-│   ├── index.js        # 服务器入口
-│   ├── database-simple.js  # 数据库操作
-│   ├── routes/
-│   │   ├── auth.js     # 认证路由
-│   │   ├── api.js      # API 路由
-│   │   └── admin.js    # 管理员路由
-│   └── middleware/
-│       └── auth.js     # 认证中间件
-└── package.json
-```
+## 部署建议
 
-## 注意事项
-
-- 首次运行会自动创建数据目录
-- 生产环境建议修改 JWT 密钥和管理员密码
-- 建议使用 HTTPS（可通过 Nginx 反向代理配置）
-- 定期备份 `server/data/` 目录
+- **数据库**：阿里云 RDS for MariaDB、腾讯云 TencentDB for MariaDB、自建都行
+- **后端**：直接 `java -jar` 或用项目里的 `Dockerfile` 打镜像
+- **App**：通过 GitHub Actions 拿 `app-release` artifact 分发（TestFlight / 蒲公英 / 直接 adb install）
 
 ## License
 

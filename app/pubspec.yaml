@@ -1,0 +1,32 @@
+name: flight_attendance_app
+description: "航班打卡 - 记录每一次起飞"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # 网络
+  http: ^1.2.2
+
+  # 状态管理 + 路由
+  get: ^4.6.6
+
+  # 本地存储
+  shared_preferences: ^2.3.2
+
+  # 日期格式化
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
