@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
 
 class ServerConfigScreen extends StatefulWidget {
   const ServerConfigScreen({super.key});
@@ -35,7 +36,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
         Get.back();
         Get.snackbar('已保存', '下次请求生效',
             snackPosition: SnackPosition.BOTTOM,
-            margin: const EdgeInsets.all(16));
+            margin: EdgeInsets.all(context.r.gapMd));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -44,43 +45,47 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Scaffold(
       appBar: AppBar(title: const Text('服务器设置')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              '后端 API 地址',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Android 模拟器用 10.0.2.2，真机请填局域网 IP',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _ctrl,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                hintText: 'http://192.168.1.100:8080',
+      body: CenteredFrame(
+        maxWidth: r.contentMaxWidth,
+        child: Padding(
+          padding: r.padAll(1.25),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '后端 API 地址',
+                style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w600),
               ),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text('保存'),
-            ),
-          ],
+              SizedBox(height: r.gapXs),
+              Text(
+                'Android 模拟器用 10.0.2.2，真机请填局域网 IP',
+                style: TextStyle(fontSize: r.textSm, color: AppColors.textSecondary),
+              ),
+              SizedBox(height: r.gapMd),
+              TextField(
+                controller: _ctrl,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(
+                  hintText: 'http://192.168.1.100:8080',
+                ),
+              ),
+              SizedBox(height: r.gapLg),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? SizedBox(
+                        width: r.gapMd * 1.25,
+                        height: r.gapMd * 1.25,
+                        child: const CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('保存'),
+              ),
+            ],
+          ),
         ),
       ),
     );

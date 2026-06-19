@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../utils/responsive.dart';
+
 /// 起飞粒子爆炸效果 —— 替代原 HTML 里的 .particle 动画
 class ParticleBurst extends StatefulWidget {
   final String emoji;
@@ -50,6 +52,7 @@ class _ParticleBurstState extends State<ParticleBurst>
 
   @override
   Widget build(BuildContext context) {
+    final fontSize = context.r.iconXl * 1.05;  // 粒子 emoji 大小跟屏幕走
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: _controller,
@@ -60,6 +63,7 @@ class _ParticleBurstState extends State<ParticleBurst>
             t: _controller.value,
             center: widget.center,
             emoji: widget.emoji,
+            fontSize: fontSize,
           ),
         ),
       ),
@@ -86,18 +90,20 @@ class _ParticlePainter extends CustomPainter {
   final double t; // 0..1
   final Offset center;
   final String emoji;
+  final double fontSize;
 
   _ParticlePainter({
     required this.particles,
     required this.t,
     required this.center,
     required this.emoji,
+    required this.fontSize,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final tp = TextPainter(
-      text: TextSpan(text: emoji, style: const TextStyle(fontSize: 32)),
+      text: TextSpan(text: emoji, style: TextStyle(fontSize: fontSize)),
       textDirection: TextDirection.ltr,
     )..layout();
 
@@ -116,12 +122,10 @@ class _ParticlePainter extends CustomPainter {
       tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
       canvas.restore();
     }
-    // Note: opacity can't be applied to text paint directly without saveLayer; the
-    // visual fading effect is approximated via shrink-to-zero which is good enough.
-    // Avoid saveLayer (costly) — for true alpha we'd need a layer per particle.
     if (opacity < 0.1) return;
   }
 
   @override
-  bool shouldRepaint(covariant _ParticlePainter old) => old.t != t;
+  bool shouldRepaint(covariant _ParticlePainter old) =>
+      old.t != t || old.fontSize != fontSize;
 }

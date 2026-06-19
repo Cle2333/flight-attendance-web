@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import '../models/record.dart';
@@ -25,10 +25,18 @@ class ApiClient {
   final LocalStore store;
   String baseUrl;
   String? _token;
+  http.Client _client;
 
   ApiClient(this.store, {String? baseUrl})
-      : baseUrl = baseUrl ?? _resolveBaseUrl(store) {
+      : baseUrl = baseUrl ?? _resolveBaseUrl(store),
+        _client = http.Client() {
     _token = store.getToken();
+  }
+
+  /// 测试用：注入 mock http client（AppState.bootstrap 的离线场景用）
+  @visibleForTesting
+  void setHttpClient(http.Client client) {
+    _client = client;
   }
 
   static String _resolveBaseUrl(LocalStore store) {
@@ -69,30 +77,34 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? body,
     bool needAuth = true,
+    Duration? timeout,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
+    // 默认 8s 超时 —— 避免后端挂掉时启动黑屏 / 操作卡死
+    final effectiveTimeout = timeout ?? const Duration(seconds: 8);
     http.Response res;
     try {
       switch (method) {
         case 'GET':
-          res = await http.get(uri, headers: _headers(needAuth));
+          res = await _client.get(uri, headers: _headers(needAuth)).timeout(effectiveTimeout);
           break;
         case 'POST':
-          res = await http.post(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body));
+          res = await _client.post(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
           break;
         case 'PUT':
-          res = await http.put(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body));
+          res = await _client.put(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
           break;
         case 'DELETE':
-          res = await http.delete(uri, headers: _headers(needAuth));
+          res = await _client.delete(uri, headers: _headers(needAuth)).timeout(effectiveTimeout);
           break;
         default:
           throw ApiException('不支持的 HTTP 方法: $method');
       }
+    } on TimeoutException {
+      // .timeout() 抛的 TimeoutException 优先于 _request 后面那个，避免被吞
+      throw ApiException('请求超时');
     } on http.ClientException catch (e) {
       throw ApiException('网络错误: ${e.message}');
-    } on TimeoutException {
-      throw ApiException('请求超时');
     } on FormatException catch (e) {
       throw ApiException('服务器响应格式错误: ${e.message}');
     } catch (e) {

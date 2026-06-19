@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 import '../widgets/particle_burst.dart';
 import '../widgets/takeoff_success_overlay.dart';
 
@@ -61,9 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _handleTap(TapUpDetails details) {
     final now = DateTime.now();
     final pos = details.localPosition;
+    // 桌面/移动的双击容差按屏幕宽度比例算 —— 30 写死太小/太大都不行
+    final tapTolerance = MediaQuery.of(context).size.shortestSide * 0.04;
     if (_lastTap != null &&
         now.difference(_lastTap!).inMilliseconds < 300 &&
-        (pos - _lastTapPos).distance < 30) {
+        (pos - _lastTapPos).distance < tapTolerance) {
       _takeOff(pos);
       _lastTap = null;
     } else {
@@ -75,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _takeOff(Offset localPos) async {
     final state = Get.find<AppState>();
     final record = await state.takeOff();
+    if (!mounted) return;
     setState(() {
       _particleKey++;
       _particleLayers.add(_ParticleLayer(
@@ -106,6 +110,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final state = Get.find<AppState>();
+    final r = context.r;
+
     return Stack(
       children: [
         GestureDetector(
@@ -115,72 +121,76 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.transparent,
             child: SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _greeting(),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Obx(
-                          () => Text(
-                            state.currentUser.value?.nickname ?? '用户',
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1,
+              child: Padding(
+                padding: r.padH(1.4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: r.padFromLTRB(0, 1.6, 0, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _greeting(),
+                            style: TextStyle(
+                              fontSize: r.textXl,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                        const Text('👋', style: TextStyle(fontSize: 32)),
-                      ],
+                          SizedBox(height: r.gapXs),
+                          Obx(
+                            () => Text(
+                              state.currentUser.value?.nickname ?? '用户',
+                              style: TextStyle(
+                                fontSize: r.text4xl,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                              ),
+                            ),
+                          ),
+                          Text('👋', style: TextStyle(fontSize: r.text2xl)),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Obx(() {
-                    final last = state.lastTakeoff.value;
-                    if (last == null || state.records.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    final diff = DateTime.now().difference(last);
-                    final display = formatDuration(
-                        diff, state.settings.value.precisionEnum);
-                    return Column(
-                      children: [
-                        const Text(
-                          '距离上次起飞',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textSecondary,
+                    const Spacer(),
+                    Obx(() {
+                      final last = state.lastTakeoff.value;
+                      if (last == null || state.records.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final diff = DateTime.now().difference(last);
+                      final display = formatDuration(
+                          diff, state.settings.value.precisionEnum);
+                      return Column(
+                        children: [
+                          Text(
+                            '距离上次起飞',
+                            style: TextStyle(
+                              fontSize: r.textLg,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          display,
-                          style: const TextStyle(
-                            fontSize: 64,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                            letterSpacing: -2,
-                            fontFeatures: [FontFeature.tabularFigures()],
+                          SizedBox(height: r.gapSm),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              display,
+                              style: TextStyle(
+                                fontSize: r.textDisplay,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                letterSpacing: -2,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  }),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: GestureDetector(
+                        ],
+                      );
+                    }),
+                    const Spacer(),
+                    GestureDetector(
                       onTap: _nextQuote,
                       child: Obx(() {
                         final quotes = state.settings.value.quotes;
@@ -192,26 +202,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 : quotes[_quoteIndex % quotes.length],
                             key: ValueKey(_quoteIndex),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 14,
+                            style: TextStyle(
+                              fontSize: r.textBase,
                               color: AppColors.textLight,
                             ),
                           ),
                         );
                       }),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    '双击屏幕起飞',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                    SizedBox(height: r.gapLg),
+                    Text(
+                      '双击屏幕起飞',
+                      style: TextStyle(
+                        fontSize: r.textLg,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 100),
-                ],
+                    SizedBox(height: r.bottomNavSafeGap),
+                  ],
+                ),
               ),
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 
 /// 起飞成功遮罩 —— 选感受 / 自定义 / 完成
 class TakeoffSuccessOverlay extends StatefulWidget {
@@ -84,83 +85,84 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Positioned.fill(
       child: FadeTransition(
         opacity: _fade,
         child: Container(
           color: AppColors.primary,
           child: SafeArea(
-            child: SlideTransition(
-              position: _slide,
-              child: Column(
-                children: [
-                  const Spacer(),
-                  const Text('✈️', style: TextStyle(fontSize: 80)),
-                  const SizedBox(height: 20),
-                  const Text(
-                    '起飞成功！',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
+            child: CenteredFrame(
+              maxWidth: r.contentMaxWidth,
+              child: SlideTransition(
+                position: _slide,
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    Text('✈️', style: TextStyle(fontSize: r.textDisplay * 1.25)),
+                    SizedBox(height: r.gapLg),
+                    Text(
+                      '起飞成功！',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: r.text3xl,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    DateFormatters.timeHM(widget.time),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                    SizedBox(height: r.gapXs),
+                    Text(
+                      DateFormatters.timeHM(widget.time),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: r.textLg,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: 2.4,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      children: [
-                        ..._presets.map(
-                          (p) => _FeelingButton(
-                            label: p,
-                            selected: _selected == p,
-                            onTap: () => setState(() => _selected = p),
+                    SizedBox(height: r.gap2xl),
+                    Padding(
+                      padding: r.padH(2.4),
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        childAspectRatio: 2.4,
+                        mainAxisSpacing: r.gapMd,
+                        crossAxisSpacing: r.gapMd,
+                        children: [
+                          ..._presets.map(
+                            (p) => _FeelingButton(
+                              label: p,
+                              selected: _selected == p,
+                              onTap: () => setState(() => _selected = p),
+                            ),
                           ),
-                        ),
-                        _FeelingButton(
-                          label: '✏️ 自定义感受',
-                          selected: false,
-                          onTap: _showCustomDialog,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: _complete,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 48,
-                        vertical: 16,
-                      ),
-                      shape: const StadiumBorder(),
-                      elevation: 4,
-                      shadowColor: Colors.black26,
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                          _FeelingButton(
+                            label: '✏️ 自定义感受',
+                            selected: false,
+                            onTap: _showCustomDialog,
+                          ),
+                        ],
                       ),
                     ),
-                    child: const Text('完成记录'),
-                  ),
-                  const Spacer(),
-                ],
+                    SizedBox(height: r.gap2xl),
+                    ElevatedButton(
+                      onPressed: _complete,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primary,
+                        padding: r.padHV(2.6, 1.0),
+                        shape: const StadiumBorder(),
+                        elevation: 4,
+                        shadowColor: Colors.black26,
+                        textStyle: TextStyle(
+                          fontSize: r.textLg,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: const Text('完成记录'),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -182,17 +184,18 @@ class _FeelingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Material(
       color: selected
           ? Colors.white.withValues(alpha: 0.4)
           : Colors.white.withValues(alpha: 0.2),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(r.radiusMd),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(r.radiusMd),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(r.radiusMd),
             border: Border.all(
               color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
               width: 2,
@@ -201,9 +204,9 @@ class _FeelingButton extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: r.textMd,
               fontWeight: FontWeight.w600,
             ),
           ),

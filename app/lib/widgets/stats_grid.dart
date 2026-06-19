@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
 
 class StatCard extends StatelessWidget {
   final String icon;
@@ -17,11 +18,12 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: r.padAll(1.0),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -34,29 +36,29 @@ class StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: r.touchTarget * 1.05,
+            height: r.touchTarget * 1.05,
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(r.radiusSm * 0.85),
             ),
             alignment: Alignment.center,
-            child: Text(icon, style: const TextStyle(fontSize: 18)),
+            child: Text(icon, style: TextStyle(fontSize: r.textLg)),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: r.gapSm),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: r.text2xl,
               fontWeight: FontWeight.w700,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: r.gap2xs),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
+            style: TextStyle(
+              fontSize: r.textXs,
               color: AppColors.textSecondary,
             ),
           ),

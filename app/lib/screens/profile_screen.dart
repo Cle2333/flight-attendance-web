@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 import '../widgets/picker_modals.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,11 +13,12 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = Get.find<AppState>();
+    final r = context.r;
     return SafeArea(
       bottom: false,
       child: Obx(() {
         final user = state.currentUser.value;
-        final isLocal = state.isLocalMode.value;
+        final isLocal = state.isManualLocalMode.value;
         final avatar = user?.avatar?.isNotEmpty == true ? user!.avatar! : '✈️';
         final nickname = user?.nickname ?? '用户';
         final id = isLocal
@@ -24,14 +26,14 @@ class ProfileScreen extends StatelessWidget {
             : 'ID: USER-${(user?.id ?? 0).toString().padLeft(4, '0')}';
 
         return ListView(
-          padding: const EdgeInsets.only(bottom: 100),
+          padding: EdgeInsets.only(bottom: r.bottomNavSafeGap),
           children: [
             Container(
-              margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+              margin: r.padFromLTRB(1.4, 0.8, 1.4, 0),
+              padding: r.padFromLTRB(1.4, 1.6, 1.4, 1.4),
               decoration: BoxDecoration(
                 color: AppColors.card,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(r.radiusXl),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.04),
@@ -50,8 +52,8 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     child: Container(
-                      width: 76,
-                      height: 76,
+                      width: r.avatarLg,
+                      height: r.avatarLg,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [AppColors.accent, AppColors.primary],
@@ -68,10 +70,10 @@ class ProfileScreen extends StatelessWidget {
                         ],
                       ),
                       alignment: Alignment.center,
-                      child: Text(avatar, style: const TextStyle(fontSize: 34)),
+                      child: Text(avatar, style: TextStyle(fontSize: r.text2xl * 1.4)),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: r.gapSm * 0.95),
                   GestureDetector(
                     onTap: () => Get.dialog(
                       NicknameEditor(
@@ -81,21 +83,23 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     child: Text(
                       nickname,
-                      style: const TextStyle(
-                        fontSize: 20,
+                      style: TextStyle(
+                        fontSize: r.textXl,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(id,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      )),
-                  const SizedBox(height: 22),
+                  SizedBox(height: r.gapXs * 0.5),
+                  Text(
+                    id,
+                    style: TextStyle(
+                      fontSize: r.textSm,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: r.gapLg * 0.7),
                   Container(height: 1, color: AppColors.border),
-                  const SizedBox(height: 20),
+                  SizedBox(height: r.gapLg * 0.6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -107,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             _Group(
               children: [
                 _Row(
@@ -239,22 +243,25 @@ class _ProfileStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Column(
       children: [
         Text(
           n,
-          style: const TextStyle(
-            fontSize: 22,
+          style: TextStyle(
+            fontSize: r.text2xl * 0.95,
             fontWeight: FontWeight.w700,
             color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(l,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            )),
+        SizedBox(height: r.gap2xs),
+        Text(
+          l,
+          style: TextStyle(
+            fontSize: r.textXs,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -266,11 +273,12 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Container(
-      margin: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      margin: r.padFromLTRB(1.4, 0.8, 1.4, 0),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -284,11 +292,11 @@ class _Group extends StatelessWidget {
           for (int i = 0; i < children.length; i++) ...[
             children[i],
             if (i < children.length - 1)
-              const Divider(
+              Divider(
                   height: 1,
                   color: AppColors.border,
-                  indent: 16,
-                  endIndent: 16),
+                  indent: r.gapMd,
+                  endIndent: r.gapMd),
           ],
         ],
       ),
@@ -315,50 +323,51 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: r.padHV(1.0, 0.875),
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: r.touchTarget,
+                height: r.touchTarget,
                 decoration: BoxDecoration(
                   color: color,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(r.radiusSm * 0.85),
                 ),
                 alignment: Alignment.center,
                 child: Text(icon,
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: r.textMd,
                       color: iconColor,
                     )),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: r.gapSm * 0.95),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: TextStyle(
+                          fontSize: r.textMd,
                           fontWeight: FontWeight.w500,
                         )),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 2),
+                      SizedBox(height: r.gap2xs),
                       Text(subtitle!,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: r.textXs,
                             color: AppColors.textSecondary,
                           )),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textLight),
+              Icon(Icons.chevron_right, size: r.iconMd, color: AppColors.textLight),
             ],
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 
 /// 头像选择
 class AvatarPicker extends StatefulWidget {
@@ -23,31 +24,32 @@ class _AvatarPickerState extends State<AvatarPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '选择头像',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             GridView.count(
               crossAxisCount: 4,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              mainAxisSpacing: r.gapSm,
+              crossAxisSpacing: r.gapSm,
               children: AvatarPicker._emojis.map((e) {
                 final isSelected = e == _selected;
                 return InkWell(
                   onTap: () => setState(() => _selected = e),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(r.radiusSm),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primaryBg : Colors.white,
@@ -55,15 +57,15 @@ class _AvatarPickerState extends State<AvatarPicker> {
                         color: isSelected ? AppColors.primary : AppColors.border,
                         width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(r.radiusSm),
                     ),
                     alignment: Alignment.center,
-                    child: Text(e, style: const TextStyle(fontSize: 32)),
+                    child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             Row(
               children: [
                 Expanded(
@@ -72,7 +74,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -108,31 +110,32 @@ class _EffectEmojiPickerState extends State<EffectEmojiPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '起飞特效 Emoji',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             GridView.count(
               crossAxisCount: 4,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              mainAxisSpacing: r.gapSm,
+              crossAxisSpacing: r.gapSm,
               children: EffectEmojiPicker._emojis.map((e) {
                 final isSelected = e == _selected;
                 return InkWell(
                   onTap: () => setState(() => _selected = e),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(r.radiusSm),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primaryBg : Colors.white,
@@ -140,15 +143,15 @@ class _EffectEmojiPickerState extends State<EffectEmojiPicker> {
                         color: isSelected ? AppColors.primary : AppColors.border,
                         width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(r.radiusSm),
                     ),
                     alignment: Alignment.center,
-                    child: Text(e, style: const TextStyle(fontSize: 32)),
+                    child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             Row(
               children: [
                 Expanded(
@@ -157,7 +160,7 @@ class _EffectEmojiPickerState extends State<EffectEmojiPicker> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -191,20 +194,21 @@ class _PrecisionPickerState extends State<PrecisionPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '计时精度',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             RadioGroup<CountdownPrecision>(
               groupValue: _selected,
               onChanged: (v) {
@@ -221,7 +225,7 @@ class _PrecisionPickerState extends State<PrecisionPicker> {
                     .toList(),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: r.gapXs),
             Row(
               children: [
                 Expanded(
@@ -230,7 +234,7 @@ class _PrecisionPickerState extends State<PrecisionPicker> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -270,20 +274,21 @@ class _NicknameEditorState extends State<NicknameEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '修改昵称',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             TextField(
               controller: _ctrl,
               autofocus: true,
@@ -298,7 +303,7 @@ class _NicknameEditorState extends State<NicknameEditor> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -362,27 +367,28 @@ class _QuotesEditorState extends State<QuotesEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '机长语录',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: r.gapSm),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 360),
+              constraints: BoxConstraints(maxHeight: r.gapXl * 11),
               child: SingleChildScrollView(
                 child: Column(
                   children: List.generate(_ctrls.length, (i) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: EdgeInsets.only(bottom: r.gapXs),
                       child: Row(
                         children: [
                           Expanded(
@@ -391,11 +397,11 @@ class _QuotesEditorState extends State<QuotesEditor> {
                               decoration: const InputDecoration(hintText: '一条语录'),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: r.gapXs),
                           IconButton(
                             onPressed: () => _remove(i),
-                            icon: const Icon(Icons.delete_outline,
-                                color: AppColors.danger),
+                            icon: Icon(Icons.delete_outline,
+                                color: AppColors.danger, size: r.iconMd),
                           ),
                         ],
                       ),
@@ -406,10 +412,10 @@ class _QuotesEditorState extends State<QuotesEditor> {
             ),
             OutlinedButton.icon(
               onPressed: _add,
-              icon: const Icon(Icons.add),
+              icon: Icon(Icons.add, size: r.iconMd),
               label: const Text('添加语录'),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: r.gapSm),
             Row(
               children: [
                 Expanded(
@@ -418,7 +424,7 @@ class _QuotesEditorState extends State<QuotesEditor> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
@@ -462,25 +468,26 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: r.padAll(1.25),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '服务器地址',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: r.gapXs),
+            Text(
               'Android 模拟器请用 10.0.2.2，真机请用局域网 IP',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: r.textXs, color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: r.gapSm),
             TextField(
               controller: _ctrl,
               keyboardType: TextInputType.url,
@@ -488,7 +495,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
                 hintText: 'http://192.168.1.100:8080',
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             Row(
               children: [
                 Expanded(
@@ -497,7 +504,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {

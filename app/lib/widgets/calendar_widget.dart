@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 
 /// 自定义日历：周视图 + 可展开月视图
 class CalendarWidget extends StatefulWidget {
@@ -31,12 +32,13 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(18),
+      margin: r.padH(1.4),
+      padding: r.padAll(1.125),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -48,32 +50,32 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHead(),
-          const SizedBox(height: 12),
-          if (!_expanded) _buildWeek(),
+          _buildHead(context),
+          SizedBox(height: r.gapSm),
+          if (!_expanded) _buildWeek(context),
           AnimatedSize(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: _expanded
                 ? Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: _buildMonth(),
+                    padding: EdgeInsets.only(top: r.gapSm),
+                    child: _buildMonth(context),
                   )
                 : const SizedBox.shrink(),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: r.gapXs * 0.5),
           Center(
             child: GestureDetector(
               onTap: _toggle,
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: r.padV(0.5),
                 child: Text(
                   _expanded ? '收起月视图' : '展开月视图',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
-                    fontSize: 13,
+                    fontSize: r.textSm,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -85,32 +87,34 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     );
   }
 
-  Widget _buildHead() {
+  Widget _buildHead(BuildContext context) {
+    final r = context.r;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           DateFormatters.monthLabel(widget.currentDate),
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: r.textMd, fontWeight: FontWeight.w600),
         ),
         Row(
           children: [
-            _navBtn('‹', () => widget.onMonthChanged(-1)),
-            const SizedBox(width: 8),
-            _navBtn('›', () => widget.onMonthChanged(1)),
+            _navBtn(context, '‹', () => widget.onMonthChanged(-1)),
+            SizedBox(width: r.gapXs),
+            _navBtn(context, '›', () => widget.onMonthChanged(1)),
           ],
         ),
       ],
     );
   }
 
-  Widget _navBtn(String label, VoidCallback onTap) {
+  Widget _navBtn(BuildContext context, String label, VoidCallback onTap) {
+    final r = context.r;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(r.radiusLg),
       child: Container(
-        width: 30,
-        height: 30,
+        width: r.touchTarget * 0.85,
+        height: r.touchTarget * 0.85,
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.border),
           shape: BoxShape.circle,
@@ -118,18 +122,18 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         alignment: Alignment.center,
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textSecondary,
-            fontSize: 14,
+            fontSize: r.textBase,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildWeek() {
+  Widget _buildWeek(BuildContext context) {
+    final r = context.r;
     final d = DateTime(widget.currentDate.year, widget.currentDate.month, widget.currentDate.day);
-    // 找到这周的周一
     final mondayOffset = (d.weekday - 1);
     final monday = d.subtract(Duration(days: mondayOffset));
     final today = DateTime.now();
@@ -145,35 +149,35 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             onTap: () => widget.onDateTapped(day),
             behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: r.padV(0.5),
               decoration: BoxDecoration(
                 color: isToday ? AppColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(r.radiusMd),
               ),
               child: Column(
                 children: [
                   Text(
                     labels[i],
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: r.textXs,
                       color: isToday
                           ? Colors.white.withValues(alpha: 0.8)
                           : AppColors.textLight,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: r.gapXs * 0.5),
                   Text(
                     '${day.day}',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: r.textLg,
                       fontWeight: FontWeight.w600,
                       color: isToday ? Colors.white : AppColors.text,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: r.gapXs * 0.5),
                   Container(
-                    width: 5,
-                    height: 5,
+                    width: r.dotSm,
+                    height: r.dotSm,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isToday
@@ -190,15 +194,16 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     );
   }
 
-  Widget _buildMonth() {
+  Widget _buildMonth(BuildContext context) {
+    final r = context.r;
     final year = widget.currentDate.year;
     final month = widget.currentDate.month;
     final first = DateTime(year, month, 1);
-    // Monday = 1 ... Sunday = 7 → 我们用 0..6
     var firstWeekday = first.weekday - 1;
     final daysInMonth = DateTime(year, month + 1, 0).day;
     final today = DateTime.now();
     final labels = ['一', '二', '三', '四', '五', '六', '日'];
+    final cellSize = r.gapLg * 2.0;  // 日历单元格高度
 
     return Column(
       children: [
@@ -209,8 +214,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                   child: Center(
                     child: Text(
                       l,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: TextStyle(
+                        fontSize: r.textXs,
                         color: AppColors.textLight,
                         fontWeight: FontWeight.w500,
                       ),
@@ -220,14 +225,14 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               )
               .toList(),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: r.gapXs * 0.5),
         ...List.generate(6, (row) {
           return Row(
             children: List.generate(7, (col) {
               final idx = row * 7 + col;
               final day = idx - firstWeekday + 1;
               if (day < 1 || day > daysInMonth) {
-                return const Expanded(child: SizedBox(height: 40));
+                return Expanded(child: SizedBox(height: cellSize));
               }
               final d = DateTime(year, month, day);
               final isToday = isSameDay(d, today);
@@ -237,14 +242,14 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                   onTap: () => widget.onDateTapped(d),
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    height: 40,
+                    height: cellSize,
                     alignment: Alignment.center,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
                         Container(
-                          width: 34,
-                          height: 34,
+                          width: cellSize * 0.85,
+                          height: cellSize * 0.85,
                           decoration: BoxDecoration(
                             color: isToday ? AppColors.primary : null,
                             shape: BoxShape.circle,
@@ -253,7 +258,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                           child: Text(
                             '$day',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: r.textSm,
                               fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
                               color: isToday ? Colors.white : AppColors.text,
                             ),
@@ -261,10 +266,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                         ),
                         if (marked)
                           Positioned(
-                            bottom: 4,
+                            bottom: cellSize * 0.1,
                             child: Container(
-                              width: 5,
-                              height: 5,
+                              width: r.dotSm,
+                              height: r.dotSm,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: isToday ? Colors.white : AppColors.primary,

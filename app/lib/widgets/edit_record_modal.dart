@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/record.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/responsive.dart';
 
 /// 编辑单条记录的起飞时间
 class EditRecordModal extends StatefulWidget {
@@ -32,20 +33,21 @@ class _EditRecordModalState extends State<EditRecordModal> {
 
   @override
   Widget build(BuildContext context) {
+    final r = context.r;
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
       backgroundColor: AppColors.card,
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: r.padAll(1.5),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '编辑起飞时间',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: r.gapMd),
             Row(
               children: [
                 Expanded(
@@ -59,11 +61,11 @@ class _EditRecordModalState extends State<EditRecordModal> {
                       );
                       if (d != null) setState(() => _date = d);
                     },
-                    icon: const Icon(Icons.calendar_today, size: 16),
+                    icon: Icon(Icons.calendar_today, size: r.iconSm),
                     label: Text(DateFormatters.dateOnly(_date)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
@@ -73,7 +75,7 @@ class _EditRecordModalState extends State<EditRecordModal> {
                       );
                       if (t != null) setState(() => _time = t);
                     },
-                    icon: const Icon(Icons.access_time, size: 16),
+                    icon: Icon(Icons.access_time, size: r.iconSm),
                     label: Text(
                       '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}',
                     ),
@@ -81,7 +83,7 @@ class _EditRecordModalState extends State<EditRecordModal> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: r.gapLg),
             Row(
               children: [
                 Expanded(
@@ -90,7 +92,7 @@ class _EditRecordModalState extends State<EditRecordModal> {
                     child: const Text('取消'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: r.gapSm),
                 Expanded(
                   child: FilledButton(
                     onPressed: () {

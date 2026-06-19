@@ -27,6 +27,20 @@ class AppColors {
   static const lbFifth = Color(0xFFBAE6FD);
 }
 
+/// 主题里的尺寸用移动端基准值写死（ThemeData 在 GetMaterialApp.theme
+/// 时构造，那时还没有 BuildContext）。需要响应式的样式请在 widget 里用
+/// `context.r.xxx` 覆盖（这些 token 仍会被 widget 级样式覆盖）。
+class _Baseline {
+  // 移动端基准值，对应 iPhone 14 (390x844)
+  static const double gap = 16.0;
+  static const double gapSm = 12.0;
+  static const double radiusMd = 16.0;
+  static const double radiusLg = 20.0;
+  static const double textMd = 15.0;
+  static const double textLg = 17.0;
+  static const double buttonH = 52.0;
+}
+
 class AppTheme {
   static ThemeData light() {
     return ThemeData(
@@ -48,7 +62,7 @@ class AppTheme {
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: AppColors.text,
-          fontSize: 17,
+          fontSize: _Baseline.textLg,
           fontWeight: FontWeight.w600,
         ),
         iconTheme: IconThemeData(color: AppColors.text),
@@ -57,7 +71,7 @@ class AppTheme {
         color: AppColors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(_Baseline.radiusLg),
         ),
         shadowColor: Colors.black.withValues(alpha: 0.04),
         margin: EdgeInsets.zero,
@@ -65,17 +79,20 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.bg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: _Baseline.gap,
+          vertical: _Baseline.gapSm,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_Baseline.radiusMd),
           borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_Baseline.radiusMd),
           borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(_Baseline.radiusMd),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         hintStyle: const TextStyle(color: AppColors.textLight),
@@ -84,11 +101,14 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(_Baseline.buttonH),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_Baseline.radiusMd),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+            fontSize: _Baseline.textMd,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -100,7 +120,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(_Baseline.radiusMd),
           ),
         ),
       ),
