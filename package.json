@@ -1,0 +1,8 @@
+{
+  "name": "attendance-web",
+  "version": "1.0.0",
+  "description": "航班打卡网页应用",
+  "scripts": {
+    "start": "cd server && npm run dev"
+  }
+}
