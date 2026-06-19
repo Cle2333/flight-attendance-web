@@ -101,19 +101,7 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
               maxWidth: r.contentMaxWidth,
               child: SlideTransition(
                 position: _slide,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // grid 行高按可用高度反算,clamp 限制范围。
-                    // 桌面短高场景下 cellH 收紧到 ~50,避免 vertical overflow。
-                    final availH = constraints.maxHeight.isFinite
-                        ? constraints.maxHeight
-                        : 600.0;
-                    final cellH = (availH * 0.18)
-                        .clamp(36.0, 64.0)
-                        .toDouble();
-                    return _buildContent(r, cellH);
-                  },
-                ),
+                child: _buildContent(r),
               ),
             ),
           ),
@@ -122,31 +110,32 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
     );
   }
 
-  /// 统一布局 —— Column 居中堆叠。
+  /// 统一布局 —— Column + Spacer 弹性分隔,不再用 SizedBox 撑间距。
   ///
-  /// grid 用 mainAxisExtent(直接给行高)代替 childAspectRatio,
-  /// 配合 build() 里 LayoutBuilder 算出的 cellH,让 grid 永远
-  /// 不会撑出可用高度。
-  Widget _buildContent(Responsive r, double cellH) {
+  /// 设计:
+  ///   - 顶部三个 Text(emoji / 标题 / 时间):自然高度,字号由 Responsive scale
+  ///   - 中部 grid:用 Flexible 拿剩余空间,grid 自身按内容布局,
+  ///     ConstrainedBox(maxHeight: ...) 限制最大高度防止短高场景溢
+  ///   - 底部按钮:自然高度
+  ///   - 两个 Spacer 弹性吸收 Column 剩余高度,内容总是垂直居中
+  ///
+  /// 短高场景下 grid 自动缩小(由 maxHeight clamp 控制),
+  /// 不会撑爆 Column。
+  Widget _buildContent(Responsive r) {
     final gridMaxW = r.compactPanelMaxWidth;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('✈️',
-            style: TextStyle(
-              fontSize: r.text3xl * 1.5,
-              height: 1.0,
-            )),
-        SizedBox(height: r.gapLg),
+        Text('✈️', style: TextStyle(fontSize: r.text3xl * 1.5)),
+        const Spacer(),
         Text(
           '起飞成功！',
           style: TextStyle(
             color: Colors.white,
             fontSize: r.text3xl,
             fontWeight: FontWeight.w800,
-            height: 1.2,
           ),
         ),
         SizedBox(height: r.gapXs),
@@ -155,11 +144,11 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
           style: TextStyle(
             color: Colors.white,
             fontSize: r.textLg,
-            height: 1.2,
           ),
         ),
-        SizedBox(height: r.gap2xl),
-        // grid 限宽 + 主轴行高固定,不参与 column 纵向 flex
+        const Spacer(),
+        // grid 限宽,按 cellAspectRatio 自然计算高度,
+        // 不被 ConstrainedBox 压 —— Spacer 自动收为 0。
         ConstrainedBox(
           constraints: BoxConstraints(maxWidth: gridMaxW),
           child: Padding(
@@ -168,14 +157,14 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisExtent: cellH,
+              childAspectRatio: 2.4,
               mainAxisSpacing: r.gapMd,
               crossAxisSpacing: r.gapMd,
               children: _buttons(),
             ),
           ),
         ),
-        SizedBox(height: r.gap2xl),
+        const Spacer(),
         ElevatedButton(
           onPressed: _complete,
           style: ElevatedButton.styleFrom(

@@ -49,44 +49,60 @@ class RecordsScreen extends StatelessWidget {
           ),
           Padding(
             padding: r.padH(1.4),
-            child: GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: r.gapSm,
-              crossAxisSpacing: r.gapSm,
-              childAspectRatio: r.isDesktop ? 1.6 : 1.3,
-              children: [
-                StatCard(
-                  icon: '✈️',
-                  iconBg: AppColors.primaryBg,
-                  value: '${state.totalRecords}',
-                  label: '总起飞次数',
-                ),
-                StatCard(
-                  icon: '🔥',
-                  iconBg: const Color(0xFFF0FDF4),
-                  value: '${state.currentStreak}',
-                  label: '连续天数',
-                ),
-                StatCard(
-                  icon: '⏰',
-                  iconBg: const Color(0xFFFFFBEB),
-                  value: () {
-                    final avg = state.averageTakeoffHour;
-                    return avg == null
-                        ? '--:--'
-                        : '${avg.toString().padLeft(2, '0')}:00';
-                  }(),
-                  label: '平均起飞时间',
-                ),
-                StatCard(
-                  icon: '🏆',
-                  iconBg: const Color(0xFFFAF5FF),
-                  value: '${state.badges}',
-                  label: '徽章',
-                ),
-              ],
+            // Wrap 代替 GridView —— 卡片高度跟 StatCard 自身内容走,
+            // 不再用硬编码的 childAspectRatio 撑高。
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // 2 列:每列宽度 = (总宽 - 间距) / 2
+                final cardW = (constraints.maxWidth - r.gapSm) / 2;
+                return Wrap(
+                  spacing: r.gapSm,
+                  runSpacing: r.gapSm,
+                  children: [
+                    SizedBox(
+                      width: cardW,
+                      child: StatCard(
+                        icon: '✈️',
+                        iconBg: AppColors.primaryBg,
+                        value: '${state.totalRecords}',
+                        label: '总起飞次数',
+                      ),
+                    ),
+                    SizedBox(
+                      width: cardW,
+                      child: StatCard(
+                        icon: '🔥',
+                        iconBg: const Color(0xFFF0FDF4),
+                        value: '${state.currentStreak}',
+                        label: '连续天数',
+                      ),
+                    ),
+                    SizedBox(
+                      width: cardW,
+                      child: StatCard(
+                        icon: '⏰',
+                        iconBg: const Color(0xFFFFFBEB),
+                        value: () {
+                          final avg = state.averageTakeoffHour;
+                          return avg == null
+                              ? '--:--'
+                              : '${avg.toString().padLeft(2, '0')}:00';
+                        }(),
+                        label: '平均起飞时间',
+                      ),
+                    ),
+                    SizedBox(
+                      width: cardW,
+                      child: StatCard(
+                        icon: '🏆',
+                        iconBg: const Color(0xFFFAF5FF),
+                        value: '${state.badges}',
+                        label: '徽章',
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           SizedBox(height: r.gapXs),

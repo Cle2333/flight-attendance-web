@@ -41,18 +41,16 @@ class Responsive {
 
   // ── gap(间距)──────────────────────────────────────────
   // 基础 gap = 屏幕宽度的 ~4.4%,clamp 在 [14, 28]
-  // 桌面端额外收窄上限到 20,避免 gap2xl = 84 把窄高度场景挤爆。
-  double get _gapUnit => isDesktop
-      ? (width * 0.044).clamp(14.0, 20.0)
-      : (width * 0.044).clamp(14.0, 28.0);
+  // (窄高度场景由 overlay 内部用 Spacer 弹性分隔处理,不再靠收紧 gap 硬扛)
+  double get _gapUnit => (width * 0.044).clamp(14.0, 28.0);
 
-  double get gap2xs => _gapUnit * 0.25; // 3.5 ~ 5   - 图标内边距
-  double get gapXs => _gapUnit * 0.5; // 7   ~ 10  - 紧凑间距
-  double get gapSm => _gapUnit * 0.75; // 10.5~ 15  - 段内间距
-  double get gapMd => _gapUnit; // 14  ~ 20  - 默认间距
-  double get gapLg => _gapUnit * 1.4; // 19.6~ 28  - 段间/卡片内 padding
-  double get gapXl => _gapUnit * 2.0; // 28  ~ 40  - 大间距
-  double get gap2xl => _gapUnit * 2.5; // 35  ~ 50  - 超大间距(页面间距,收紧避免撑爆 overlay)
+  double get gap2xs => _gapUnit * 0.25; // 3.5 ~ 7   - 图标内边距
+  double get gapXs => _gapUnit * 0.5; // 7   ~ 14  - 紧凑间距
+  double get gapSm => _gapUnit * 0.75; // 10.5~ 21  - 段内间距
+  double get gapMd => _gapUnit; // 14  ~ 28  - 默认间距
+  double get gapLg => _gapUnit * 1.4; // 19.6~ 39  - 段间/卡片内 padding
+  double get gapXl => _gapUnit * 2.0; // 28  ~ 56  - 大间距
+  double get gap2xl => _gapUnit * 3.0; // 42  ~ 84  - 超大间距(页面间距)
 
   // ── radius(圆角)────────────────────────────────────────
   // 圆角随 gap 同比例缩放,下限 8,上限 32
