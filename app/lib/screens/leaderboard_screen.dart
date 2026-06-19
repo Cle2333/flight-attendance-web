@@ -51,7 +51,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: EdgeInsets.only(bottom: r.bottomNavSafeGap),
+        padding: EdgeInsets.only(bottom: r.gapLg),
         children: [
           Padding(
             padding: r.padFromLTRB(1.4, 1.0, 1.4, 0.8),

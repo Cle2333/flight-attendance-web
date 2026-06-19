@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
             : 'ID: USER-${(user?.id ?? 0).toString().padLeft(4, '0')}';
 
         return ListView(
-          padding: EdgeInsets.only(bottom: r.bottomNavSafeGap),
+          padding: EdgeInsets.only(bottom: r.gapLg),
           children: [
             Container(
               margin: r.padFromLTRB(1.4, 0.8, 1.4, 0),

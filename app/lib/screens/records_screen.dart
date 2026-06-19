@@ -39,7 +39,7 @@ class _RecordsScreenState extends State<RecordsScreen> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: EdgeInsets.only(bottom: r.bottomNavSafeGap),
+        padding: EdgeInsets.only(bottom: r.gapLg),
         children: [
           Padding(
             padding: r.padFromLTRB(1.4, 1.0, 1.4, 0.8),
@@ -75,7 +75,11 @@ class _RecordsScreenState extends State<RecordsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: r.gapSm,
               crossAxisSpacing: r.gapSm,
-              childAspectRatio: 1.5,
+              // StatCard 是横向布局，卡片高度 = max(icon, value+label) ~ 42px
+              // 加上 padding 48px，cell 至少需要 ~90px 高
+              // aspectRatio = cell_w / cell_h ≈ 190 / 100 ≈ 1.9 (桌面)
+              // 留点余量 = 1.6 (桌面) / 1.3 (手机)
+              childAspectRatio: r.isDesktop ? 1.6 : 1.3,
               children: [
                 StatCard(
                   icon: '✈️',

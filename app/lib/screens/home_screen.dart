@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: r.bottomNavSafeGap),
+                    SizedBox(height: r.gapLg),
                   ],
                 ),
               ),

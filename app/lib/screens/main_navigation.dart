@@ -6,9 +6,11 @@ import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import 'home_screen.dart';
 import 'leaderboard_screen.dart';
+import 'main_dock.dart';
 import 'profile_screen.dart';
 import 'records_screen.dart';
 
+/// App 主壳：4 个 tab 的 IndexedStack + 底部 dock
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
@@ -32,6 +34,9 @@ class _MainNavigationState extends State<MainNavigation> {
     final r = context.r;
 
     return Scaffold(
+      // body 延伸到 dock 后面渲染，避免 dock 槽高度被算入 bodyMaxHeight
+      // (SafeArea + CenteredFrame 在无界高度的 bottomNavigationBar 槽里更稳)
+      extendBody: true,
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
@@ -55,115 +60,30 @@ class _MainNavigationState extends State<MainNavigation> {
             );
           }),
 
-          // 桌面端：内容居中 + 约束在手机列宽内
+          // 主内容：IndexedStack 让 4 个 screen 都活着，切换无重建
           Expanded(
             child: CenteredFrame(
               maxWidth: r.contentMaxWidth,
-              child: IndexedStack(
-                index: _index,
-                children: _screens,
-              ),
+              child: IndexedStack(index: _index, children: _screens),
             ),
           ),
         ],
       ),
+
+      // 底部 dock —— 已拆到 main_dock.dart
       bottomNavigationBar: SafeArea(
         top: false,
         child: CenteredFrame(
           maxWidth: r.contentMaxWidth,
           padding: EdgeInsets.only(bottom: r.gapSm),
-          child: Container(
-            margin: EdgeInsets.symmetric(horizontal: r.gapMd),
-            height: r.navBarH,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9).withValues(alpha: 0.72),
-              borderRadius: BorderRadius.circular(r.radiusXl),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(r.radiusXl),
-              child: Row(
-                children: List.generate(_icons.length, (i) {
-                  final active = i == _index;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _index = i),
-                      behavior: HitTestBehavior.opaque,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutCubic,
-                            width: active ? r.gapXl * 1.4 : 0,
-                            height: r.buttonHsm,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(r.radiusMd),
-                              boxShadow: active
-                                  ? [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          ),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _icons[i],
-                                size: r.iconMd,
-                                color: active
-                                    ? AppColors.primary
-                                    : AppColors.textLight,
-                              ),
-                              SizedBox(height: r.gap2xs),
-                              Text(
-                                _labels[i],
-                                style: TextStyle(
-                                  fontSize: r.textXs,
-                                  fontWeight: active
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                  color: active
-                                      ? AppColors.primary
-                                      : AppColors.textLight,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
+          child: MainDock(
+            index: _index,
+            onChanged: (i) => setState(() => _index = i),
           ),
         ),
       ),
     );
   }
-
-  static const _icons = <IconData>[
-    Icons.home_outlined,
-    Icons.calendar_today_outlined,
-    Icons.emoji_events_outlined,
-    Icons.person_outline,
-  ];
-
-  static const _labels = ['首页', '记录', '排行', '我的'];
 }
 
 /// 顶部黄条 —— server 不可达时提醒，本地缓存可用、所有操作仍工作
@@ -181,11 +101,17 @@ class _OfflineBanner extends StatelessWidget {
         child: CenteredFrame(
           maxWidth: r.contentMaxWidth,
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: r.gapSm, vertical: r.gapSm),
+            padding: EdgeInsets.symmetric(
+              horizontal: r.gapSm,
+              vertical: r.gapSm,
+            ),
             child: Row(
               children: [
-                Icon(Icons.cloud_off_outlined,
-                    size: r.iconMd * 0.9, color: const Color(0xFF92400E)),
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: r.iconMd * 0.9,
+                  color: const Color(0xFF92400E),
+                ),
                 SizedBox(width: r.gapXs),
                 Expanded(
                   child: Text(
