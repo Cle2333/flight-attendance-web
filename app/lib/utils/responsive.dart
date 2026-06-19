@@ -36,20 +36,23 @@ class Responsive {
   // ── 缩放因子 ────────────────────────────────────────────
   static const double _refW = 390.0; // 基准宽度
   double get _scale => (width / _refW).clamp(0.85, 1.6);
-  double get _scaleBig => (width / _refW).clamp(0.85, 1.4); // 字体用,小一点避免爆
+  double get _scaleBig => isDesktop ? (width / _refW).clamp(0.85, 1.05) : (width / _refW).clamp(0.85, 1.4); // 字体用:桌面压上限到 1.05 防止溢出,移动端 1.4
   double get _scaleIcon => (width / _refW).clamp(0.9, 1.5); // 图标用
 
   // ── gap(间距)──────────────────────────────────────────
   // 基础 gap = 屏幕宽度的 ~4.4%,clamp 在 [14, 28]
-  double get _gapUnit => (width * 0.044).clamp(14.0, 28.0);
+  // 桌面端额外收窄上限到 20,避免 gap2xl = 84 把窄高度场景挤爆。
+  double get _gapUnit => isDesktop
+      ? (width * 0.044).clamp(14.0, 20.0)
+      : (width * 0.044).clamp(14.0, 28.0);
 
-  double get gap2xs => _gapUnit * 0.25; // 3.5 ~ 7   - 图标内边距
-  double get gapXs => _gapUnit * 0.5; // 7   ~ 14  - 紧凑间距
-  double get gapSm => _gapUnit * 0.75; // 10.5~ 21  - 段内间距
-  double get gapMd => _gapUnit; // 14  ~ 28  - 默认间距
-  double get gapLg => _gapUnit * 1.4; // 19.6~ 39  - 段间/卡片内 padding
-  double get gapXl => _gapUnit * 2.0; // 28  ~ 56  - 大间距
-  double get gap2xl => _gapUnit * 3.0; // 42  ~ 84  - 超大间距(页面间距)
+  double get gap2xs => _gapUnit * 0.25; // 3.5 ~ 5   - 图标内边距
+  double get gapXs => _gapUnit * 0.5; // 7   ~ 10  - 紧凑间距
+  double get gapSm => _gapUnit * 0.75; // 10.5~ 15  - 段内间距
+  double get gapMd => _gapUnit; // 14  ~ 20  - 默认间距
+  double get gapLg => _gapUnit * 1.4; // 19.6~ 28  - 段间/卡片内 padding
+  double get gapXl => _gapUnit * 2.0; // 28  ~ 40  - 大间距
+  double get gap2xl => _gapUnit * 2.5; // 35  ~ 50  - 超大间距(页面间距,收紧避免撑爆 overlay)
 
   // ── radius(圆角)────────────────────────────────────────
   // 圆角随 gap 同比例缩放,下限 8,上限 32
@@ -71,7 +74,7 @@ class Responsive {
   double get text2xl => 24.0 * _scaleBig; // ~21 ~ 33
   double get text3xl => 28.0 * _scaleBig; // ~24 ~ 39
   double get text4xl => 36.0 * _scaleBig; // ~31 ~ 50
-  double get textDisplay => 64.0 * _scaleBig.clamp(0.85, 1.25); // 倒计时大字
+  double get textDisplay => 64.0 * _scaleBig.clamp(0.85, 1.1); // 倒计时大字:上限更紧,避免桌面放大过头撑爆 overlay
 
   // ── icon(图标)──────────────────────────────────────────
   double get iconXs => 14.0 * _scaleIcon; // ~13 ~ 21

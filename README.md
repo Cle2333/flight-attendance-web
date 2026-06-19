@@ -172,18 +172,39 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.100:8080
 
 ## 配置项
 
-| 配置项 | 默认值 | 说明 |
-|---|---|---|
-| `SERVER_PORT` | 8080 | HTTP 端口 |
-| `DB_URL` | `jdbc:mariadb://localhost:3306/flight_attendance?...` | JDBC URL |
-| `DB_USER` | `flight` | 数据库用户 |
-| `DB_PASSWORD` | `flight` | 数据库密码 |
-| `JWT_SECRET` | 占位（dev 提示） | JWT 签名密钥，**生产必改 ≥32 字符随机** |
-| `JWT_EXPIRATION_HOURS` | 168 | token 有效期（小时） |
-| `ADMIN_PASSWORD` | `admin123` | 仅作为占位符预留，以后 `AdminController` 加鉴权时会用上 |
-| `SPRING_PROFILES_ACTIVE` | `dev` | 当前 profile：dev / prod / test |
+> **集中在一个文件**：`server/src/main/resources/application-config.yml`
+>
+> 那个文件里有所有可改项的默认值、生产提醒、环境变量名、以及怎么生成强密码。上线只需要改那个文件（或者用环境变量覆盖）。
+>
+> 其他 yml（`application.yml` / `application-{profile}.yml`）只放"项目固定"和"profile 间的硬差异"，一般不需要动。
 
-全部都可用环境变量注入，遵循 Spring Boot 标准 relaxed binding（`SPRING_DATASOURCE_URL` 或 `DB_URL` 都行）。
+### 快速开始
+
+```bash
+cd server/src/main/resources
+$EDITOR application-config.yml      # 改完后：prod 上线 / dev 本地
+```
+
+或用环境变量覆盖（容器推荐）：
+
+```bash
+export DB_URL='jdbc:mariadb://your-db:3306/flight_attendance'
+export DB_USER='flight'
+export DB_PASSWORD='strong-password-here'
+export JWT_SECRET=$(openssl rand -hex 32)
+java -jar target/flight-attendance-server.jar --spring.profiles.active=prod
+```
+
+### Profile 选哪个
+
+| Profile | 什么时候用 | DB | Flyway |
+|---|---|---|---|
+| `dev` (默认) | 本地开发 | 本地 MariaDB（docker-compose.yml 一键起） | ✅ |
+| `prod` | 生产部署 | 外部 MariaDB（必须用环境变量配） | ✅ |
+| `test` | 集成测试 | H2 内存 | ❌（自动建表） |
+| `h2` | 本机没装 MariaDB 的备胎 | H2 文件（重启保留） | ❌（自动建表） |
+
+
 
 ## 构建 / CI
 

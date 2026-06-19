@@ -1,0 +1,67 @@
+# =============================================================================
+#  application-config.yml
+#  ★ 上线前要改的唯一地方 ★
+# =============================================================================
+#
+#  规则：
+#    - 标了 ⚠️ 的 key，**上线前必须改成生产值**
+#    - 每个 key 都有注释：用途 / 默认值 / 生成方式 / 环境变量名
+#    - 优先级：环境变量 > application-{profile}.yml > 本文件
+#    - profile 专属配置（dialect、Flyway on/off 等）仍在各自 yml 里
+#
+#  三种部署姿势：
+#    1. 直接改这个文件 + 提交 git（适合 1-2 台机器的小项目）
+#    2. 环境变量覆盖（容器/K8s 推荐）：
+#         export DB_PASSWORD=xxxxxxxx
+#         export JWT_SECRET=$(openssl rand -hex 32)
+#         java -jar flight-attendance-server.jar --spring.profiles.active=prod
+#    3. .env 文件 + docker-compose env_file
+#
+#  不要再翻 application.yml / application-{dev,prod,test,h2}.yml，
+#  那些文件只放"profile 之间的硬差异"。
+# =============================================================================
+
+server:
+  # HTTP 端口
+  # 环境变量：SERVER_PORT
+  port: 8080
+
+# -----------------------------------------------------------------------------
+# 数据库（⚠️ 上线前必改 password）
+# -----------------------------------------------------------------------------
+# 环境变量覆盖（任一即可）：
+#   DB_URL / DB_USER / DB_PASSWORD
+#   SPRING_DATASOURCE_URL / SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD
+spring:
+  datasource:
+    # 常用 JDBC 参数：useSSL(server cert 校验)、serverTimezone(时区)、
+    # allowPublicKeyRetrieval(MariaDB 11+ 默认开)。
+    url: jdbc:mariadb://localhost:3306/flight_attendance?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8
+    username: flight
+    password: flight       # ⚠️ 上线必改（≥ 16 字符随机）
+
+# -----------------------------------------------------------------------------
+# JWT（⚠️ JWT_SECRET 必须改）
+# -----------------------------------------------------------------------------
+# 拿到 secret = 拿到伪造任意用户 token 的能力
+# 生成（任一）：
+#   openssl rand -hex 32
+#   openssl rand -base64 48
+#   head -c 48 /dev/urandom | base64
+# HS256 要求：≥ 256 bit (32 字节 / 64 hex 字符 / 44 base64 字符)
+# 环境变量：JWT_SECRET
+app:
+  jwt:
+    secret: "dev-secret-key-please-change-this-in-production-it-must-be-at-least-32-chars-long-for-hs256"   # ⚠️ 上线必改
+    # Token 有效期（小时）。168 = 7 天
+    # 环境变量：JWT_EXPIRATION_HOURS
+    expiration-hours: 168
+
+# -----------------------------------------------------------------------------
+# Admin 密码（占位）
+# -----------------------------------------------------------------------------
+# AdminController 目前没鉴权，但 AdminController 加 Basic Auth 或 admin-login
+# 时这个值会被用上。先改了省得改两次。
+# 环境变量：ADMIN_PASSWORD
+  admin:
+    password: "admin123"   # ⚠️ 上线必改

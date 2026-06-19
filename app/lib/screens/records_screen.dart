@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../models/record.dart';
 import '../state/app_state.dart';
+import '../state/controllers/records_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../utils/responsive.dart';
@@ -10,29 +11,12 @@ import '../widgets/calendar_widget.dart';
 import '../widgets/stats_grid.dart';
 import 'record_detail_screen.dart';
 
-class RecordsScreen extends StatefulWidget {
+class RecordsScreen extends StatelessWidget {
   const RecordsScreen({super.key});
 
   @override
-  State<RecordsScreen> createState() => _RecordsScreenState();
-}
-
-class _RecordsScreenState extends State<RecordsScreen> {
-  DateTime _calDate = DateTime.now();
-  bool _detailOpen = false;
-
-  void _navigateToDay(DateTime d) {
-    final state = Get.find<AppState>();
-    final list = state.records
-        .where((r) => isSameDay(r.time, d))
-        .toList()
-      ..sort((a, b) => b.time.compareTo(a.time));
-    if (list.isEmpty) return;
-    Get.to(() => RecordDetailScreen(recordId: list.first.id));
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final ctrl = Get.put(RecordsController());
     final state = Get.find<AppState>();
     final r = context.r;
 
@@ -48,17 +32,13 @@ class _RecordsScreenState extends State<RecordsScreen> {
               style: TextStyle(fontSize: r.text2xl, fontWeight: FontWeight.w800),
             ),
           ),
-          CalendarWidget(
-            currentDate: _calDate,
-            onMonthChanged: (delta) {
-              setState(() {
-                _calDate = DateTime(
-                    _calDate.year, _calDate.month + delta, _calDate.day);
-              });
-            },
-            hasRecordOn: state.hasRecordOn,
-            onDateTapped: _navigateToDay,
-          ),
+          Obx(() => CalendarWidget(
+                currentDate: ctrl.calDate.value,
+                onMonthChanged: ctrl.shiftMonth,
+                hasRecordOn: state.hasRecordOn,
+                onDateTapped: ctrl.navigateToDay,
+                expandedNotifier: ctrl.calendarExpanded,
+              )),
           SizedBox(height: r.gapMd),
           Padding(
             padding: r.padFromLTRB(1.4, 0.4, 1.4, 0.6),
@@ -75,10 +55,6 @@ class _RecordsScreenState extends State<RecordsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: r.gapSm,
               crossAxisSpacing: r.gapSm,
-              // StatCard 是横向布局，卡片高度 = max(icon, value+label) ~ 42px
-              // 加上 padding 48px，cell 至少需要 ~90px 高
-              // aspectRatio = cell_w / cell_h ≈ 190 / 100 ≈ 1.9 (桌面)
-              // 留点余量 = 1.6 (桌面) / 1.3 (手机)
               childAspectRatio: r.isDesktop ? 1.6 : 1.3,
               children: [
                 StatCard(
@@ -115,59 +91,55 @@ class _RecordsScreenState extends State<RecordsScreen> {
           ),
           SizedBox(height: r.gapXs),
           GestureDetector(
-            onTap: () => setState(() => _detailOpen = !_detailOpen),
+            onTap: ctrl.toggleDetail,
             behavior: HitTestBehavior.opaque,
-            child: Container(
-              margin: r.padHV(1.4, 0.8),
-              padding: r.padHV(1.0, 1.0),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(r.radiusLg),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 1),
+            child: Obx(() => Container(
+                  margin: r.padHV(1.4, 0.8),
+                  padding: r.padHV(1.0, 1.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.card,
+                    borderRadius: BorderRadius.circular(r.radiusLg),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '查看起飞记录',
-                    style: TextStyle(
-                      fontSize: r.textMd,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '查看起飞记录',
+                        style: TextStyle(
+                          fontSize: r.textMd,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      AnimatedRotation(
+                        duration: const Duration(milliseconds: 300),
+                        turns: ctrl.detailOpen.value ? 0.25 : 0,
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: r.iconMd,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                  AnimatedRotation(
-                    duration: const Duration(milliseconds: 300),
-                    turns: _detailOpen ? 0.25 : 0,
-                    child: Icon(
-                      Icons.chevron_right,
-                      size: r.iconMd,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                )),
           ),
           Obx(() {
             final records = state.records;
-            final sorted = [...records]..sort((a, b) => b.time.compareTo(a.time));
-            final grouped = <String, List<FlightRecord>>{};
-            for (final r0 in sorted) {
-              final k = DateFormatters.dayLabel(r0.time);
-              grouped.putIfAbsent(k, () => []).add(r0);
-            }
+            final grouped = ctrl.groupedRecords(records);
+            final detailOpen = ctrl.detailOpen.value;
             return AnimatedSize(
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              child: _detailOpen
+              child: detailOpen
                   ? Padding(
                       padding: r.padFromLTRB(1.4, 0, 1.4, 0),
                       child: grouped.isEmpty

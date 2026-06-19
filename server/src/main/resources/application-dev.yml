@@ -1,12 +1,15 @@
+# =============================================================================
+#  application-dev.yml —— dev profile 独有配置
+# =============================================================================
+#
+#  数据库连接 / 用户名 / 密码等"通用可改项"已在 application-config.yml 里
+#  这里只放 dev 专属的：MariaDB 方言、Flyway 开、validate schema
+# =============================================================================
+
 spring:
-  datasource:
-    url: ${DB_URL:jdbc:mariadb://localhost:3306/flight_attendance?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8}
-    username: ${DB_USER:flight}
-    password: ${DB_PASSWORD:flight}
-    driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate   # 让 Flyway 管控 schema，JPA 只校验一致性
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect

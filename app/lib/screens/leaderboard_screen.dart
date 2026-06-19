@@ -1,51 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../api/api_exception.dart';
 import '../models/settings.dart';
 import '../state/app_state.dart';
+import '../state/controllers/leaderboard_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 
-class LeaderboardScreen extends StatefulWidget {
+class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  State<LeaderboardScreen> createState() => _LeaderboardScreenState();
-}
-
-class _LeaderboardScreenState extends State<LeaderboardScreen> {
-  String _type = 'week';
-  bool _loading = false;
-  String? _error;
-  List<LeaderboardEntry> _entries = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final list =
-          await Get.find<AppState>().api.getLeaderboard(type: _type);
-      if (mounted) setState(() => _entries = list);
-    } on ApiException catch (e) {
-      if (mounted) setState(() => _error = e.message);
-    } catch (e) {
-      if (mounted) setState(() => _error = '加载失败');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final ctrl = Get.put(LeaderboardController());
     final state = Get.find<AppState>();
     final r = context.r;
     return SafeArea(
@@ -68,26 +35,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(r.radiusMd),
               ),
-              child: Row(
-                children: [
-                  _Tab(
-                    label: '本周',
-                    active: _type == 'week',
-                    onTap: () {
-                      setState(() => _type = 'week');
-                      _load();
-                    },
-                  ),
-                  _Tab(
-                    label: '总榜',
-                    active: _type == 'all',
-                    onTap: () {
-                      setState(() => _type = 'all');
-                      _load();
-                    },
-                  ),
-                ],
-              ),
+              child: Obx(() => Row(
+                    children: [
+                      _Tab(
+                        label: '本周',
+                        active: ctrl.type.value == 'week',
+                        onTap: () => ctrl.switchType('week'),
+                      ),
+                      _Tab(
+                        label: '总榜',
+                        active: ctrl.type.value == 'all',
+                        onTap: () => ctrl.switchType('all'),
+                      ),
+                    ],
+                  )),
             ),
           ),
           Obx(() {
@@ -117,24 +78,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               );
             }
-            if (_loading) {
+            if (ctrl.loading.value) {
               return Padding(
                 padding: EdgeInsets.all(r.gapXl * 1.5),
                 child: Center(child: CircularProgressIndicator()),
               );
             }
-            if (_error != null) {
+            if (ctrl.error.value != null) {
               return Padding(
                 padding: EdgeInsets.all(r.gapXl),
                 child: Center(
                   child: Text(
-                    _error!,
+                    ctrl.error.value!,
                     style: TextStyle(color: AppColors.danger),
                   ),
                 ),
               );
             }
-            if (_entries.isEmpty) {
+            if (ctrl.entries.isEmpty) {
               return Padding(
                 padding: EdgeInsets.all(r.gapXl),
                 child: Center(
@@ -143,12 +104,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               );
             }
+            final entries = ctrl.entries.toList();
             return Column(
               children: [
                 SizedBox(height: r.gapLg),
-                _Podium(entries: _entries),
+                _Podium(entries: entries),
                 SizedBox(height: r.gapLg),
-                ..._entries.asMap().entries.map((e) {
+                ...entries.asMap().entries.map((e) {
                   final i = e.key;
                   final u = e.value;
                   return Padding(

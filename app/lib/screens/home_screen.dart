@@ -162,20 +162,34 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 手机端:纵向堆叠,顶/中/底三块用 Spacer 撑开(原设计)
   Widget _buildMobileLayout(Responsive r, AppState state) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // 问候 + 👋 同行,昵称在下一行 —— 跟桌面端结构完全一致,
+        // 桌面端手机端统一居中。
         Padding(
           padding: r.padFromLTRB(0, 0, 0, 0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                _greeting(),
-                style: TextStyle(
-                  fontSize: r.textXl,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _greeting(),
+                    style: TextStyle(
+                      fontSize: r.textXl,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(width: r.gapXs),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: r.gap2xs),
+                    child: Text('👋',
+                        style: TextStyle(fontSize: r.text2xl)),
+                  ),
+                ],
               ),
               SizedBox(height: r.gapXs),
               Obx(
@@ -188,7 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              Text('👋', style: TextStyle(fontSize: r.text2xl)),
             ],
           ),
         ),
@@ -265,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// 桌面端:纵向三段,每段都居中
-  ///   - 顶部:问候 + 昵称 + 👋(横排,垂直居中)
+  ///   - 顶部:问候 + 昵称 + 👋(昵称和 emoji 一行,问候在上,整体居中)
   ///   - 中部:距离上次起飞 + 大字 display(居中)
   ///   - 底部:quote + "双击屏幕起飞" 提示(居中)
   /// Spacer 三段分隔,使各段在垂直方向也均匀分布。
@@ -274,22 +287,23 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // ── 顶部:问候 + 昵称 + 👋 居中横排 ──────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Column(
+            Text(
+              _greeting(),
+              style: TextStyle(
+                fontSize: r.textXl,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: r.gapXs),
+            // 昵称 + 👋 emoji 同行,emoji 紧跟在文字后
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  _greeting(),
-                  style: TextStyle(
-                    fontSize: r.textXl,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: r.gapXs),
                 Obx(
                   () => Text(
                     state.currentUser.value?.nickname ?? '用户',
@@ -300,10 +314,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                SizedBox(width: r.gapXs),
+                Padding(
+                  padding: EdgeInsets.only(bottom: r.gap2xs),
+                  child: Text('👋',
+                      style: TextStyle(fontSize: r.text2xl)),
+                ),
               ],
             ),
-            SizedBox(width: r.gapMd),
-            Text('👋', style: TextStyle(fontSize: r.text2xl)),
           ],
         ),
         const Spacer(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../state/app_state.dart';
+import '../state/controllers/navigation_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive.dart';
 import 'home_screen.dart';
@@ -11,15 +12,8 @@ import 'profile_screen.dart';
 import 'records_screen.dart';
 
 /// App 主壳：4 个 tab 的 IndexedStack + 底部 dock
-class MainNavigation extends StatefulWidget {
+class MainNavigation extends StatelessWidget {
   const MainNavigation({super.key});
-
-  @override
-  State<MainNavigation> createState() => _MainNavigationState();
-}
-
-class _MainNavigationState extends State<MainNavigation> {
-  int _index = 0;
 
   static const _screens = <Widget>[
     HomeScreen(),
@@ -30,6 +24,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final nav = Get.put(NavigationController());
     final state = Get.find<AppState>();
     final r = context.r;
 
@@ -48,7 +43,7 @@ class _MainNavigationState extends State<MainNavigation> {
             return _OfflineBanner(
               onRetry: () async {
                 final ok = await state.retryConnection();
-                if (!ok && mounted) {
+                if (!ok) {
                   Get.snackbar(
                     '仍不可达',
                     '服务器没响应，继续本地保存',
@@ -71,11 +66,11 @@ class _MainNavigationState extends State<MainNavigation> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(bottom: r.dockReservedHeight),
-              child: IndexedStack(
-                sizing: StackFit.expand,
-                index: _index,
-                children: _screens,
-              ),
+              child: Obx(() => IndexedStack(
+                    sizing: StackFit.expand,
+                    index: nav.selectedIndex.value,
+                    children: _screens,
+                  )),
             ),
           ),
         ],
@@ -88,10 +83,10 @@ class _MainNavigationState extends State<MainNavigation> {
         child: CenteredFrame(
           maxWidth: r.compactPanelMaxWidth,
           padding: EdgeInsets.only(bottom: r.gapSm),
-          child: MainDock(
-            index: _index,
-            onChanged: (i) => setState(() => _index = i),
-          ),
+          child: Obx(() => MainDock(
+                index: nav.selectedIndex.value,
+                onChanged: nav.select,
+              )),
         ),
       ),
     );

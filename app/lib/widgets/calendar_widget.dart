@@ -5,11 +5,24 @@ import '../utils/formatters.dart';
 import '../utils/responsive.dart';
 
 /// 自定义日历：周视图 + 可展开月视图
-class CalendarWidget extends StatefulWidget {
+///
+/// 完全无状态 —— 展开状态由调用方通过 [expandedNotifier] 注入
+/// (用 `ValueNotifier<bool>`),月份切换通过 [onMonthChanged] 回调,
+/// 日期标记通过 [hasRecordOn] 闭包,日期点击通过 [onDateTapped] 回调。
+class CalendarWidget extends StatelessWidget {
   final DateTime currentDate;
   final ValueChanged<int> onMonthChanged; // -1: prev month, +1: next month
   final bool Function(DateTime) hasRecordOn;
   final ValueChanged<DateTime> onDateTapped;
+
+  /// 展开状态由外部持有 —— 通常调用方会在自己的 controller 里持有一个
+  /// `final expanded = false.obs`,这里传 `controller.expanded` 即可。
+  /// 如果不传,默认使用静态 fallback(共享同一个状态,不推荐多个 widget 共用)。
+  final ValueNotifier<bool>? expandedNotifier;
+
+  /// 兼容旧调用方:不传 expandedNotifier 时,所有 widget 共用这个全局
+  /// ValueNotifier(适合单实例场景)。多个实例同时存在会互相影响。
+  static final _defaultExpanded = ValueNotifier(false);
 
   const CalendarWidget({
     super.key,
@@ -17,22 +30,18 @@ class CalendarWidget extends StatefulWidget {
     required this.onMonthChanged,
     required this.hasRecordOn,
     required this.onDateTapped,
+    this.expandedNotifier,
   });
 
-  @override
-  State<CalendarWidget> createState() => _CalendarWidgetState();
-}
-
-class _CalendarWidgetState extends State<CalendarWidget> {
-  bool _expanded = false;
-
-  void _toggle() {
-    setState(() => _expanded = !_expanded);
+  void _toggleExpanded() {
+    final notifier = expandedNotifier ?? _defaultExpanded;
+    notifier.value = !notifier.value;
   }
 
   @override
   Widget build(BuildContext context) {
     final r = context.r;
+    final expanded = expandedNotifier ?? _defaultExpanded;
     return Container(
       margin: r.padH(1.4),
       padding: r.padAll(1.125),
@@ -52,35 +61,45 @@ class _CalendarWidgetState extends State<CalendarWidget> {
         children: [
           _buildHead(context),
           SizedBox(height: r.gapSm),
-          if (!_expanded) _buildWeek(context),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: _expanded
-                ? Padding(
-                    padding: EdgeInsets.only(top: r.gapSm),
-                    child: _buildMonth(context),
-                  )
-                : const SizedBox.shrink(),
-          ),
-          SizedBox(height: r.gapXs * 0.5),
-          Center(
-            child: GestureDetector(
-              onTap: _toggle,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: r.padV(0.5),
-                child: Text(
-                  _expanded ? '收起月视图' : '展开月视图',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: r.textSm,
-                    fontWeight: FontWeight.w500,
+          ValueListenableBuilder<bool>(
+            valueListenable: expanded,
+            builder: (_, isExpanded, __) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!isExpanded) _buildWeek(context),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: isExpanded
+                        ? Padding(
+                            padding: EdgeInsets.only(top: r.gapSm),
+                            child: _buildMonth(context),
+                          )
+                        : const SizedBox.shrink(),
                   ),
-                ),
-              ),
-            ),
+                  SizedBox(height: r.gapXs * 0.5),
+                  Center(
+                    child: GestureDetector(
+                      onTap: _toggleExpanded,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: r.padV(0.5),
+                        child: Text(
+                          isExpanded ? '收起月视图' : '展开月视图',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: r.textSm,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -93,14 +112,14 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          DateFormatters.monthLabel(widget.currentDate),
+          DateFormatters.monthLabel(currentDate),
           style: TextStyle(fontSize: r.textMd, fontWeight: FontWeight.w600),
         ),
         Row(
           children: [
-            _navBtn(context, '‹', () => widget.onMonthChanged(-1)),
+            _navBtn(context, '‹', () => onMonthChanged(-1)),
             SizedBox(width: r.gapXs),
-            _navBtn(context, '›', () => widget.onMonthChanged(1)),
+            _navBtn(context, '›', () => onMonthChanged(1)),
           ],
         ),
       ],
@@ -133,7 +152,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   Widget _buildWeek(BuildContext context) {
     final r = context.r;
-    final d = DateTime(widget.currentDate.year, widget.currentDate.month, widget.currentDate.day);
+    final d = DateTime(currentDate.year, currentDate.month, currentDate.day);
     final mondayOffset = (d.weekday - 1);
     final monday = d.subtract(Duration(days: mondayOffset));
     final today = DateTime.now();
@@ -143,10 +162,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       children: List.generate(7, (i) {
         final day = monday.add(Duration(days: i));
         final isToday = isSameDay(day, today);
-        final marked = widget.hasRecordOn(day);
+        final marked = hasRecordOn(day);
         return Expanded(
           child: GestureDetector(
-            onTap: () => widget.onDateTapped(day),
+            onTap: () => onDateTapped(day),
             behavior: HitTestBehavior.opaque,
             child: Container(
               padding: r.padV(0.5),
@@ -196,8 +215,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 
   Widget _buildMonth(BuildContext context) {
     final r = context.r;
-    final year = widget.currentDate.year;
-    final month = widget.currentDate.month;
+    final year = currentDate.year;
+    final month = currentDate.month;
     final first = DateTime(year, month, 1);
     var firstWeekday = first.weekday - 1;
     final daysInMonth = DateTime(year, month + 1, 0).day;
@@ -236,10 +255,10 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               }
               final d = DateTime(year, month, day);
               final isToday = isSameDay(d, today);
-              final marked = widget.hasRecordOn(d);
+              final marked = hasRecordOn(d);
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => widget.onDateTapped(d),
+                  onTap: () => onDateTapped(d),
                   behavior: HitTestBehavior.opaque,
                   child: Container(
                     height: cellSize,

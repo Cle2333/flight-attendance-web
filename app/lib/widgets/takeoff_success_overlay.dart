@@ -6,9 +6,10 @@ import '../utils/responsive.dart';
 
 /// 起飞成功遮罩 —— 选感受 / 自定义 / 完成
 ///
-/// 布局策略:
-///  - 移动端(< 1024): 沿用原 Column + Spacer 居中堆叠
-///  - 桌面端(>= 1024): Row 左右分栏 —— 左庆祝文案,右感受按钮 + 完成按钮
+/// 布局策略(桌面/手机统一):
+///   Column 居中堆叠 —— emoji / 标题 / 时间 / 感受 grid / 完成按钮
+///   LayoutBuilder 按可用高度算缩放因子 k,自动适配窄高度场景(避免 overflow)
+///   CenteredFrame 用 contentMaxWidth(桌面 1200 / 手机 480)居中
 class TakeoffSuccessOverlay extends StatefulWidget {
   final DateTime time;
   final ValueChanged<String> onComplete;
@@ -100,15 +101,17 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
               maxWidth: r.contentMaxWidth,
               child: SlideTransition(
                 position: _slide,
-                // 窄屏兜底 —— 桌面端 Row 需要 ~ 200 + 2*compactPanelMaxWidth 的宽,
-                // 不到的话用移动布局避免 overflow。
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final wideEnough =
-                        constraints.maxWidth >= r.compactPanelMaxWidth * 2 + 200;
-                    return (r.isDesktop && wideEnough)
-                        ? _buildDesktop(r)
-                        : _buildMobile(r);
+                    // grid 行高按可用高度反算,clamp 限制范围。
+                    // 桌面短高场景下 cellH 收紧到 ~50,避免 vertical overflow。
+                    final availH = constraints.maxHeight.isFinite
+                        ? constraints.maxHeight
+                        : 600.0;
+                    final cellH = (availH * 0.18)
+                        .clamp(36.0, 64.0)
+                        .toDouble();
+                    return _buildContent(r, cellH);
                   },
                 ),
               ),
@@ -119,163 +122,77 @@ class _TakeoffSuccessOverlayState extends State<TakeoffSuccessOverlay>
     );
   }
 
-  /// 移动端:纵向居中堆叠。
+  /// 统一布局 —— Column 居中堆叠。
   ///
-  /// 用 LayoutBuilder + 内层缩放因子 k(=min(1, maxHeight/idealH))把
-  /// emoji/字号/间距按可用高度等比缩,避免高 >= ~480 的屏幕(如 Chrome
-  /// devtools 420×447、iPhone SE 等短高场景)出现 vertical overflow。
-  /// k=1 时与原版完全一致。
-  Widget _buildMobile(Responsive r) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const idealH = 540.0; // 设计稿高度参考值
-        final k = (constraints.maxHeight / idealH).clamp(0.55, 1.0).toDouble();
+  /// grid 用 mainAxisExtent(直接给行高)代替 childAspectRatio,
+  /// 配合 build() 里 LayoutBuilder 算出的 cellH,让 grid 永远
+  /// 不会撑出可用高度。
+  Widget _buildContent(Responsive r, double cellH) {
+    final gridMaxW = r.compactPanelMaxWidth;
 
-        // 在 k<1 的场景下,额外收紧 grid 的 childAspectRatio(更扁),
-        // 让 2 行 grid 高度总和降下来。
-        final gridAspect = 2.4 + (1.0 - k) * 1.2; // k=1 → 2.4, k=0.55 → 3.24
-
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('✈️',
-                style: TextStyle(fontSize: r.textDisplay * 1.25 * k)),
-            SizedBox(height: r.gapLg * k),
-            Text(
-              '起飞成功！',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: r.text3xl * k,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            SizedBox(height: r.gapXs * k),
-            Text(
-              DateFormatters.timeHM(widget.time),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: r.textLg * k,
-              ),
-            ),
-            SizedBox(height: r.gap2xl * k),
-            Padding(
-              padding: r.padH(2.4),
-              child: GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: gridAspect,
-                mainAxisSpacing: r.gapMd * k,
-                crossAxisSpacing: r.gapMd * k,
-                children: _buttons(),
-              ),
-            ),
-            SizedBox(height: r.gap2xl * k),
-            ElevatedButton(
-              onPressed: _complete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                padding: r.padHV(2.6, 1.0 * k),
-                shape: const StadiumBorder(),
-                elevation: 4,
-                shadowColor: Colors.black26,
-                textStyle: TextStyle(
-                  fontSize: r.textLg * k,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              child: const Text('完成记录'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// 桌面端:Row 左右分栏。
-  ///   - 左:emoji + 标题 + 时间(居左,主信息)
-  ///   - 右:感受按钮(2x2 grid,限宽 compactPanelMaxWidth)+ 完成按钮
-  ///
-  /// 父级 CenteredFrame 已经给了 Row 有界高度,直接 mainAxisAlignment.center
-  /// 就能让两侧内容垂直居中。**不能**套 IntrinsicHeight —— GridView(shrinkWrap:true)
-  /// 用的是 RenderShrinkWrappingViewport,不支持计算 intrinsic dimensions,
-  /// 任何要求子节点报告 intrinsic height 的父节点都会炸。
-  Widget _buildDesktop(Responsive r) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: r.gapXl),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // ── 左:庆祝文案 ──────────────────────────
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '✈️',
-                  style: TextStyle(fontSize: r.textDisplay * 1.5),
-                ),
-                SizedBox(height: r.gapLg),
-                Text(
-                  '起飞成功！',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: r.text4xl,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(height: r.gapXs),
-                Text(
-                  DateFormatters.timeHM(widget.time),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: r.textXl,
-                  ),
-                ),
-              ],
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text('✈️',
+            style: TextStyle(
+              fontSize: r.text3xl * 1.5,
+              height: 1.0,
+            )),
+        SizedBox(height: r.gapLg),
+        Text(
+          '起飞成功！',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: r.text3xl,
+            fontWeight: FontWeight.w800,
+            height: 1.2,
+          ),
+        ),
+        SizedBox(height: r.gapXs),
+        Text(
+          DateFormatters.timeHM(widget.time),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: r.textLg,
+            height: 1.2,
+          ),
+        ),
+        SizedBox(height: r.gap2xl),
+        // grid 限宽 + 主轴行高固定,不参与 column 纵向 flex
+        ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: gridMaxW),
+          child: Padding(
+            padding: r.padH(2.4),
+            child: GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisExtent: cellH,
+              mainAxisSpacing: r.gapMd,
+              crossAxisSpacing: r.gapMd,
+              children: _buttons(),
             ),
           ),
-          SizedBox(width: r.gap2xl),
-          // ── 右:感受 + 完成(走 compactPanelMaxWidth,宽屏不拉爆) ──
-          SizedBox(
-            width: r.compactPanelMaxWidth,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 2.4,
-                  mainAxisSpacing: r.gapMd,
-                  crossAxisSpacing: r.gapMd,
-                  children: _buttons(),
-                ),
-                SizedBox(height: r.gapXl),
-                ElevatedButton(
-                  onPressed: _complete,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    padding: r.padHV(2.6, 1.0),
-                    shape: const StadiumBorder(),
-                    elevation: 4,
-                    shadowColor: Colors.black26,
-                    textStyle: TextStyle(
-                      fontSize: r.textLg,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  child: const Text('完成记录'),
-                ),
-              ],
+        ),
+        SizedBox(height: r.gap2xl),
+        ElevatedButton(
+          onPressed: _complete,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
+            padding: r.padHV(2.6, 1.0),
+            shape: const StadiumBorder(),
+            elevation: 4,
+            shadowColor: Colors.black26,
+            textStyle: TextStyle(
+              fontSize: r.textLg,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        ],
-      ),
+          child: const Text('完成记录'),
+        ),
+      ],
     );
   }
 
