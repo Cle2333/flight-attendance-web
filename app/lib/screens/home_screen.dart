@@ -81,11 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() {
       _particleKey++;
-      _particleLayers.add(_ParticleLayer(
-        key: ValueKey(_particleKey),
-        emoji: state.settings.value.effectEmoji,
-        center: localPos,
-      ));
+      _particleLayers.add(
+        _ParticleLayer(
+          key: ValueKey(_particleKey),
+          emoji: state.settings.value.effectEmoji,
+          center: localPos,
+        ),
+      );
       _pendingTakeoff = record.time;
     });
   }
@@ -114,113 +116,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Stack(
       children: [
-        GestureDetector(
-          onTapUp: _handleTap,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            color: Colors.transparent,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: r.padH(1.4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: r.padFromLTRB(0, 1.6, 0, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _greeting(),
-                            style: TextStyle(
-                              fontSize: r.textXl,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          SizedBox(height: r.gapXs),
-                          Obx(
-                            () => Text(
-                              state.currentUser.value?.nickname ?? '用户',
-                              style: TextStyle(
-                                fontSize: r.text4xl,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -1,
-                              ),
-                            ),
-                          ),
-                          Text('👋', style: TextStyle(fontSize: r.text2xl)),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    Obx(() {
-                      final last = state.lastTakeoff.value;
-                      if (last == null || state.records.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      final diff = DateTime.now().difference(last);
-                      final display = formatDuration(
-                          diff, state.settings.value.precisionEnum);
-                      return Column(
-                        children: [
-                          Text(
-                            '距离上次起飞',
-                            style: TextStyle(
-                              fontSize: r.textLg,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          SizedBox(height: r.gapSm),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              display,
-                              style: TextStyle(
-                                fontSize: r.textDisplay,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                letterSpacing: -2,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: _nextQuote,
-                      child: Obx(() {
-                        final quotes = state.settings.value.quotes;
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: Text(
-                            quotes.isEmpty
-                                ? '每一次起飞都是一次冒险'
-                                : quotes[_quoteIndex % quotes.length],
-                            key: ValueKey(_quoteIndex),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: r.textBase,
-                              color: AppColors.textLight,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    SizedBox(height: r.gapLg),
-                    Text(
-                      '双击屏幕起飞',
-                      style: TextStyle(
-                        fontSize: r.textLg,
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: r.gapLg),
-                  ],
+        // Positioned.fill + CenteredFrame —— 桌面端让内容居中在
+        // contentMaxWidth(1200) 内,左右留白;手机端 min(<480) 铺满。
+        Positioned.fill(
+          child: GestureDetector(
+            onTapUp: _handleTap,
+            behavior: HitTestBehavior.opaque,
+            child: CenteredFrame(
+              maxWidth: r.contentMaxWidth,
+              child: Container(
+                color: Colors.transparent,
+                child: SafeArea(
+                  bottom: false,
+                  child: r.isDesktop
+                      ? _buildDesktopLayout(r, state)
+                      : _buildMobileLayout(r, state),
                 ),
               ),
             ),
@@ -248,11 +158,240 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
+  /// 手机端:纵向堆叠,顶/中/底三块用 Spacer 撑开(原设计)
+  Widget _buildMobileLayout(Responsive r, AppState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: r.padFromLTRB(0, 0, 0, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _greeting(),
+                style: TextStyle(
+                  fontSize: r.textXl,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: r.gapXs),
+              Obx(
+                () => Text(
+                  state.currentUser.value?.nickname ?? '用户',
+                  style: TextStyle(
+                    fontSize: r.text4xl,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                  ),
+                ),
+              ),
+              Text('👋', style: TextStyle(fontSize: r.text2xl)),
+            ],
+          ),
+        ),
+        const Spacer(),
+        Obx(() {
+          final last = state.lastTakeoff.value;
+          if (last == null || state.records.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final diff = DateTime.now().difference(last);
+          final display = formatDuration(
+            diff,
+            state.settings.value.precisionEnum,
+          );
+          return Column(
+            children: [
+              Text(
+                '距离上次起飞',
+                style: TextStyle(
+                  fontSize: r.textLg,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: r.gapSm),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  display,
+                  style: TextStyle(
+                    fontSize: r.textDisplay,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                    letterSpacing: -2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+        const Spacer(),
+        GestureDetector(
+          onTap: _nextQuote,
+          child: Obx(() {
+            final quotes = state.settings.value.quotes;
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Text(
+                quotes.isEmpty
+                    ? '每一次起飞都是一次冒险'
+                    : quotes[_quoteIndex % quotes.length],
+                key: ValueKey(_quoteIndex),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: r.textBase,
+                  color: AppColors.textLight,
+                ),
+              ),
+            );
+          }),
+        ),
+        SizedBox(height: r.gapLg),
+        Text(
+          '双击屏幕起飞',
+          style: TextStyle(
+            fontSize: r.textLg,
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: r.gapLg),
+      ],
+    );
+  }
+
+  /// 桌面端:纵向三段,每段都居中
+  ///   - 顶部:问候 + 昵称 + 👋(横排,垂直居中)
+  ///   - 中部:距离上次起飞 + 大字 display(居中)
+  ///   - 底部:quote + "双击屏幕起飞" 提示(居中)
+  /// Spacer 三段分隔,使各段在垂直方向也均匀分布。
+  Widget _buildDesktopLayout(Responsive r, AppState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // ── 顶部:问候 + 昵称 + 👋 居中横排 ──────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _greeting(),
+                  style: TextStyle(
+                    fontSize: r.textXl,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: r.gapXs),
+                Obx(
+                  () => Text(
+                    state.currentUser.value?.nickname ?? '用户',
+                    style: TextStyle(
+                      fontSize: r.text4xl,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(width: r.gapMd),
+            Text('👋', style: TextStyle(fontSize: r.text2xl)),
+          ],
+        ),
+        const Spacer(),
+        // ── 中部:倒计时大字,居中 ──────────────────────
+        Obx(() {
+          final last = state.lastTakeoff.value;
+          if (last == null || state.records.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          final diff = DateTime.now().difference(last);
+          final display = formatDuration(
+            diff,
+            state.settings.value.precisionEnum,
+          );
+          return Column(
+            children: [
+              Text(
+                '距离上次起飞',
+                style: TextStyle(
+                  fontSize: r.textLg,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              SizedBox(height: r.gapSm),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  display,
+                  style: TextStyle(
+                    fontSize: r.textDisplay,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                    letterSpacing: -2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+        const Spacer(),
+        // ── 底部:quote + 起飞提示,居中 ────────────────────
+        Column(
+          children: [
+            GestureDetector(
+              onTap: _nextQuote,
+              child: Obx(() {
+                final quotes = state.settings.value.quotes;
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: Text(
+                    quotes.isEmpty
+                        ? '每一次起飞都是一次冒险'
+                        : quotes[_quoteIndex % quotes.length],
+                    key: ValueKey(_quoteIndex),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: r.textBase,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            SizedBox(height: r.gapLg),
+            Text(
+              '双击屏幕起飞',
+              style: TextStyle(
+                fontSize: r.textLg,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: r.gapLg),
+      ],
+    );
+  }
 }
 
 class _ParticleLayer {
   final ValueKey<int> key;
   final String emoji;
   final Offset center;
-  _ParticleLayer({required this.key, required this.emoji, required this.center});
+  _ParticleLayer({
+    required this.key,
+    required this.emoji,
+    required this.center,
+  });
 }

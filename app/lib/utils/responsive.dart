@@ -27,91 +27,108 @@ class Responsive {
   double get height => size.height;
 
   // ── 断点(Material 3)──────────────────────────────────
-  bool get isCompact  => width < 600;
-  bool get isMedium   => width >= 600 && width < 1024;
+  bool get isCompact => width < 600;
+  bool get isMedium => width >= 600 && width < 1024;
   bool get isExpanded => width >= 1024 && width < 1440;
-  bool get isLarge    => width >= 1440;
-  bool get isDesktop  => width >= 1024;
+  bool get isLarge => width >= 1440;
+  bool get isDesktop => width >= 1024;
 
   // ── 缩放因子 ────────────────────────────────────────────
-  static const double _refW = 390.0;          // 基准宽度
+  static const double _refW = 390.0; // 基准宽度
   double get _scale => (width / _refW).clamp(0.85, 1.6);
-  double get _scaleBig => (width / _refW).clamp(0.85, 1.4);  // 字体用,小一点避免爆
-  double get _scaleIcon => (width / _refW).clamp(0.9, 1.5);  // 图标用
+  double get _scaleBig => (width / _refW).clamp(0.85, 1.4); // 字体用,小一点避免爆
+  double get _scaleIcon => (width / _refW).clamp(0.9, 1.5); // 图标用
 
   // ── gap(间距)──────────────────────────────────────────
   // 基础 gap = 屏幕宽度的 ~4.4%,clamp 在 [14, 28]
   double get _gapUnit => (width * 0.044).clamp(14.0, 28.0);
 
-  double get gap2xs => _gapUnit * 0.25;  // 3.5 ~ 7   - 图标内边距
-  double get gapXs  => _gapUnit * 0.5;   // 7   ~ 14  - 紧凑间距
-  double get gapSm  => _gapUnit * 0.75;  // 10.5~ 21  - 段内间距
-  double get gapMd  => _gapUnit;         // 14  ~ 28  - 默认间距
-  double get gapLg  => _gapUnit * 1.4;   // 19.6~ 39  - 段间/卡片内 padding
-  double get gapXl  => _gapUnit * 2.0;   // 28  ~ 56  - 大间距
-  double get gap2xl => _gapUnit * 3.0;   // 42  ~ 84  - 超大间距(页面间距)
+  double get gap2xs => _gapUnit * 0.25; // 3.5 ~ 7   - 图标内边距
+  double get gapXs => _gapUnit * 0.5; // 7   ~ 14  - 紧凑间距
+  double get gapSm => _gapUnit * 0.75; // 10.5~ 21  - 段内间距
+  double get gapMd => _gapUnit; // 14  ~ 28  - 默认间距
+  double get gapLg => _gapUnit * 1.4; // 19.6~ 39  - 段间/卡片内 padding
+  double get gapXl => _gapUnit * 2.0; // 28  ~ 56  - 大间距
+  double get gap2xl => _gapUnit * 3.0; // 42  ~ 84  - 超大间距(页面间距)
 
   // ── radius(圆角)────────────────────────────────────────
   // 圆角随 gap 同比例缩放,下限 8,上限 32
   double get _rUnit => (width * 0.035).clamp(8.0, 32.0);
-  double get radiusXs => _rUnit * 0.5;   // 4  ~ 16
-  double get radiusSm => _rUnit * 0.75;  // 6  ~ 24
-  double get radiusMd => _rUnit;         // 8  ~ 32
-  double get radiusLg => _rUnit * 1.5;   // 12 ~ 48
-  double get radiusXl => _rUnit * 2.0;   // 16 ~ 64
+  double get radiusXs => _rUnit * 0.5; // 4  ~ 16
+  double get radiusSm => _rUnit * 0.75; // 6  ~ 24
+  double get radiusMd => _rUnit; // 8  ~ 32
+  double get radiusLg => _rUnit * 1.5; // 12 ~ 48
+  double get radiusXl => _rUnit * 2.0; // 16 ~ 64
 
   // ── text(字号)──────────────────────────────────────────
   // 字体缩放稍温和,避免 4K 上变得夸张
-  double get textXs      => 11.0 * _scaleBig;   // ~10 ~ 15
-  double get textSm      => 13.0 * _scaleBig;   // ~12 ~ 18
-  double get textBase    => 14.0 * _scaleBig;   // ~12 ~ 19
-  double get textMd      => 15.0 * _scaleBig;   // ~13 ~ 21
-  double get textLg      => 17.0 * _scaleBig;   // ~15 ~ 23
-  double get textXl      => 20.0 * _scaleBig;   // ~17 ~ 27
-  double get text2xl     => 24.0 * _scaleBig;   // ~21 ~ 33
-  double get text3xl     => 28.0 * _scaleBig;   // ~24 ~ 39
-  double get text4xl     => 36.0 * _scaleBig;   // ~31 ~ 50
-  double get textDisplay => 64.0 * _scaleBig.clamp(0.85, 1.25);  // 倒计时大字
+  double get textXs => 11.0 * _scaleBig; // ~10 ~ 15
+  double get textSm => 13.0 * _scaleBig; // ~12 ~ 18
+  double get textBase => 14.0 * _scaleBig; // ~12 ~ 19
+  double get textMd => 15.0 * _scaleBig; // ~13 ~ 21
+  double get textLg => 17.0 * _scaleBig; // ~15 ~ 23
+  double get textXl => 20.0 * _scaleBig; // ~17 ~ 27
+  double get text2xl => 24.0 * _scaleBig; // ~21 ~ 33
+  double get text3xl => 28.0 * _scaleBig; // ~24 ~ 39
+  double get text4xl => 36.0 * _scaleBig; // ~31 ~ 50
+  double get textDisplay => 64.0 * _scaleBig.clamp(0.85, 1.25); // 倒计时大字
 
   // ── icon(图标)──────────────────────────────────────────
-  double get iconXs  => 14.0 * _scaleIcon;   // ~13 ~ 21
-  double get iconSm  => 16.0 * _scaleIcon;   // ~14 ~ 24
-  double get iconMd  => 20.0 * _scaleIcon;   // ~18 ~ 30
-  double get iconLg  => 24.0 * _scaleIcon;   // ~22 ~ 36
-  double get iconXl  => 32.0 * _scaleIcon;   // ~29 ~ 48
-  double get icon2xl => 44.0 * _scaleIcon;   // ~40 ~ 66
+  double get iconXs => 14.0 * _scaleIcon; // ~13 ~ 21
+  double get iconSm => 16.0 * _scaleIcon; // ~14 ~ 24
+  double get iconMd => 20.0 * _scaleIcon; // ~18 ~ 30
+  double get iconLg => 24.0 * _scaleIcon; // ~22 ~ 36
+  double get iconXl => 32.0 * _scaleIcon; // ~29 ~ 48
+  double get icon2xl => 44.0 * _scaleIcon; // ~40 ~ 66
 
   // ── 控件尺寸 ─────────────────────────────────────────────
-  double get touchTarget => 36.0 * _scale.clamp(1.0, 1.3);  // 按钮/可点元素最小尺寸,36-46
-  double get buttonH     => _gapUnit * 3.25;                // 主按钮高度,45-91
-  double get buttonHsm   => _gapUnit * 2.5;                 // 次按钮,35-70
-  double get inputH      => _gapUnit * 3.0;                 // 输入框高度,42-84
-  double get navBarH     => _gapUnit * 4.0;                 // 底部导航,56-112
+  double get touchTarget => 36.0 * _scale.clamp(1.0, 1.3); // 按钮/可点元素最小尺寸,36-46
+  double get buttonH => _gapUnit * 3.25; // 主按钮高度,45-91
+  double get buttonHsm => _gapUnit * 2.5; // 次按钮,35-70
+  double get inputH => _gapUnit * 3.0; // 输入框高度,42-84
+  double get navBarH => _gapUnit * 4.0; // 底部导航,56-112
 
-  double get avatarSm    => _gapUnit * 2.25;  // 小头像,31-63
-  double get avatarMd    => _gapUnit * 3.0;   // 中头像,42-84
-  double get avatarLg    => _gapUnit * 4.0;   // 大头像,56-112
+  double get avatarSm => _gapUnit * 2.25; // 小头像,31-63
+  double get avatarMd => _gapUnit * 3.0; // 中头像,42-84
+  double get avatarLg => _gapUnit * 4.0; // 大头像,56-112
 
-  double get dotSm       => _gapUnit * 0.3;   // 小圆点 4-8
+  double get dotSm => _gapUnit * 0.3; // 小圆点 4-8
 
   // ── padding helpers ──────────────────────────────────────
-  EdgeInsets padAll(double f)  => EdgeInsets.all(_gapUnit * f);
-  EdgeInsets padH(double f)    => EdgeInsets.symmetric(horizontal: _gapUnit * f);
-  EdgeInsets padV(double f)    => EdgeInsets.symmetric(vertical: _gapUnit * f);
-  EdgeInsets padHV(double h, double v) => EdgeInsets.symmetric(horizontal: _gapUnit * h, vertical: _gapUnit * v);
+  EdgeInsets padAll(double f) => EdgeInsets.all(_gapUnit * f);
+  EdgeInsets padH(double f) => EdgeInsets.symmetric(horizontal: _gapUnit * f);
+  EdgeInsets padV(double f) => EdgeInsets.symmetric(vertical: _gapUnit * f);
+  EdgeInsets padHV(double h, double v) =>
+      EdgeInsets.symmetric(horizontal: _gapUnit * h, vertical: _gapUnit * v);
   EdgeInsets padFromLTRB(double l, double t, double r, double b) =>
-      EdgeInsets.fromLTRB(_gapUnit * l, _gapUnit * t, _gapUnit * r, _gapUnit * b);
+      EdgeInsets.fromLTRB(
+        _gapUnit * l,
+        _gapUnit * t,
+        _gapUnit * r,
+        _gapUnit * b,
+      );
 
   /// 屏幕水平 padding -- 手机窄、桌面宽
-  EdgeInsets get screenPaddingH => EdgeInsets.symmetric(horizontal: _gapUnit * 1.4);
+  EdgeInsets get screenPaddingH =>
+      EdgeInsets.symmetric(horizontal: _gapUnit * 1.4);
 
   /// 底部安全留白（avoid 被 bottom nav 遮挡；现 extendBody:true 下 dock 会浮在上层，不需额外占位）
   // 不再提供 bottomNavSafeGap，dock 盖在 body 上面，无需预留。
 
   // ── 桌面端容器 ──────────────────────────────────────────
-  /// 在桌面端把内容约束在手机列宽内,居中显示;移动端保持原样。
-  double get contentMaxWidth => 480.0;  // 手机列最大宽
-  double get contentMaxWidthWide => 720.0;  // 平板/桌面可放宽
+  /// 主内容最大宽 —— 移动端保持手机列宽,桌面端放宽以铺展开。
+  ///  - 手机/平板(< 1024): 480(沿用旧 web 风格的手机列)
+  ///  - 桌面(>= 1024): 1200(给首页/记录/排行更多展示空间)
+  double get contentMaxWidth => isDesktop ? 1200.0 : 480.0;
+  double get contentMaxWidthWide => 720.0; // 兼容旧代码 / 平板
+
+  /// 紧凑面板最大宽 —— 底部 dock、桌面端侧栏卡片等都走这个,
+  /// 让"窄浮动 UI"在宽屏上也不会被拉到全宽。
+  double get compactPanelMaxWidth => 480.0;
+
+  /// body 末端需要给 dock 留的高度 = dock 自身高 + 一段安全间距。
+  /// 配合 Scaffold(extendBody: true),body 不会被 dock 遮挡。
+  double get dockReservedHeight => navBarH + gapMd;
 
   // ── SizedBox helpers ─────────────────────────────────────
   SizedBox vGap(double f) => SizedBox(height: _gapUnit * f);
@@ -173,10 +190,10 @@ class CenteredFrame extends StatelessWidget {
 /// 文本 + 颜色 token(去掉 MediaQuery 调用)
 class FontSize {
   static double base(BuildContext c) => c.r.textBase;
-  static double sm(BuildContext c)   => c.r.textSm;
-  static double md(BuildContext c)   => c.r.textMd;
-  static double lg(BuildContext c)   => c.r.textLg;
-  static double xl(BuildContext c)   => c.r.textXl;
-  static double xxl(BuildContext c)  => c.r.text2xl;
+  static double sm(BuildContext c) => c.r.textSm;
+  static double md(BuildContext c) => c.r.textMd;
+  static double lg(BuildContext c) => c.r.textLg;
+  static double xl(BuildContext c) => c.r.textXl;
+  static double xxl(BuildContext c) => c.r.text2xl;
   static double display(BuildContext c) => c.r.textDisplay;
 }

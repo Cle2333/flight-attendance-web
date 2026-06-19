@@ -34,8 +34,8 @@ class _MainNavigationState extends State<MainNavigation> {
     final r = context.r;
 
     return Scaffold(
-      // body 延伸到 dock 后面渲染，避免 dock 槽高度被算入 bodyMaxHeight
-      // (SafeArea + CenteredFrame 在无界高度的 bottomNavigationBar 槽里更稳)
+      // body 延伸到 dock 后面渲染(背景色铺到屏幕底),但内容区下沿
+      // 留出 dockReservedHeight,确保关键内容不被 dock 盖住。
       extendBody: true,
       backgroundColor: AppColors.bg,
       body: Column(
@@ -60,21 +60,33 @@ class _MainNavigationState extends State<MainNavigation> {
             );
           }),
 
-          // 主内容：IndexedStack 让 4 个 screen 都活着，切换无重建
+          // 主内容:IndexedStack 让 4 个 screen 都活着,切换无重建
+          // 末端留 dockReservedHeight,避免被底部 dock 遮挡
+          // (首页的 Spacer 会吸收,滚动列表的 bottom padding 自动生效)
+          // 注 1:不能塞 Padding 再套 Expanded —— Expanded 只允许出现在 Flex 内,
+          //     套在 Padding 里会让 IndexedStack 收到异常约束,首页列宽坍缩到 415。
+          // 注 2:必须 StackFit.expand —— IndexedStack 默认 loose 会让 children 拿到
+          //     maxWidth=infinity,导致 HomeScreen 的 Stack/Column 按内容自然宽度
+          //     渲染(~300px),桌面端 IndexedStack 自身坍缩到该宽度。
           Expanded(
-            child: CenteredFrame(
-              maxWidth: r.contentMaxWidth,
-              child: IndexedStack(index: _index, children: _screens),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: r.dockReservedHeight),
+              child: IndexedStack(
+                sizing: StackFit.expand,
+                index: _index,
+                children: _screens,
+              ),
             ),
           ),
         ],
       ),
 
       // 底部 dock —— 已拆到 main_dock.dart
+      // 走 compactPanelMaxWidth,保持浮动药丸观感(不跟主内容一起拉到全宽)
       bottomNavigationBar: SafeArea(
         top: false,
         child: CenteredFrame(
-          maxWidth: r.contentMaxWidth,
+          maxWidth: r.compactPanelMaxWidth,
           padding: EdgeInsets.only(bottom: r.gapSm),
           child: MainDock(
             index: _index,
