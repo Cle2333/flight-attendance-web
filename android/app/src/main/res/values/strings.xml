@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">航班打卡</string>
+    <string name="title_activity_main">航班打卡</string>
+    <string name="package_name">com.cle2333.flightattendance</string>
+    <string name="custom_url_scheme">com.cle2333.flightattendance</string>
+</resources>

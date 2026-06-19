@@ -11,3 +11,9 @@ app.js
 index-old.html
 styles.css
 demo/
+
+# Capacitor Android构建产物
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
