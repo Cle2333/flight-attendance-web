@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
 import '../utils/responsive.dart';
 import '../widgets/picker_modals.dart';
+
+/// 项目仓库地址 —— 「关于」行点击后跳转
+const _kRepoUrl = 'https://github.com/Cle2333/flight-attendance-web';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -290,9 +294,37 @@ class ProfileScreen extends StatelessWidget {
                 }),
               ],
             ),
+
+            // ── 关于本应用 —— 跳转 GitHub 仓库 ───────
+            _Group(
+              children: [
+                _Row(
+                  icon: 'ℹ️',
+                  color: context.palette.primaryBg,
+                  title: '关于本应用',
+                  subtitle: 'github.com/Cle2333/flight-attendance-web',
+                  onTap: () => _openRepo(context),
+                ),
+              ],
+            ),
           ],
         );
       }),
+    );
+  }
+}
+
+/// 调起系统浏览器打开项目仓库 —— 打开不了则用 snackbar 提示手动访问
+Future<void> _openRepo(BuildContext context) async {
+  final uri = Uri.parse(_kRepoUrl);
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else {
+    Get.snackbar(
+      '无法打开浏览器',
+      '请手动访问: $_kRepoUrl',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 4),
     );
   }
 }

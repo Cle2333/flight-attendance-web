@@ -49,64 +49,74 @@ class RecordsScreen extends StatelessWidget {
           ),
           // ⚠️ 必须包 Obx：getter 读 records.length，records 是 RxList，
           // 没 Obx 永远不刷新。
-          Obx(() => Padding(
-            padding: r.padH(1.4),
-            // Wrap 代替 GridView —— 卡片高度跟 StatCard 自身内容走,
-            // 不再用硬编码的 childAspectRatio 撑高。
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // 2 列:每列宽度 = (总宽 - 间距) / 2
-                final cardW = (constraints.maxWidth - r.gapSm) / 2;
-                return Wrap(
-                  spacing: r.gapSm,
-                  runSpacing: r.gapSm,
-                  children: [
-                    SizedBox(
-                      width: cardW,
-                      child: StatCard(
-                        icon: '✈️',
-                        iconBg: context.palette.primaryBg,
-                        value: '${state.totalRecords}',
-                        label: '总起飞次数',
+          // ⚠️⚠️ 而且 Rx 读取必须放在 Obx builder 的**同步**作用域里！
+          //    GetX 只追踪 builder 返回 widget 之前同步执行的 Rx 访问。
+          //    如果把 state.xxx 放在 LayoutBuilder/Builder/FutureBuilder 的
+          //    builder 里，GetX 看不到，会报 "improper use of GetX"。
+          Obx(() {
+            // 先读 — 让 GetX 追到
+            final total = state.totalRecords;
+            final streak = state.currentStreak;
+            final avg = state.averageTakeoffHour;
+            final badges = state.badges;
+            final avgText = avg == null
+                ? '--:--'
+                : '${avg.toString().padLeft(2, '0')}:00';
+
+            return Padding(
+              padding: r.padH(1.4),
+              // Wrap 代替 GridView —— 卡片高度跟 StatCard 自身内容走,
+              // 不再用硬编码的 childAspectRatio 撑高。
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // 2 列:每列宽度 = (总宽 - 间距) / 2
+                  final cardW = (constraints.maxWidth - r.gapSm) / 2;
+                  return Wrap(
+                    spacing: r.gapSm,
+                    runSpacing: r.gapSm,
+                    children: [
+                      SizedBox(
+                        width: cardW,
+                        child: StatCard(
+                          icon: '✈️',
+                          iconBg: context.palette.primaryBg,
+                          value: '$total',
+                          label: '总起飞次数',
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: cardW,
-                      child: StatCard(
-                        icon: '🔥',
-                        iconBg: context.palette.successBg,
-                        value: '${state.currentStreak}',
-                        label: '连续天数',
+                      SizedBox(
+                        width: cardW,
+                        child: StatCard(
+                          icon: '🔥',
+                          iconBg: context.palette.successBg,
+                          value: '$streak',
+                          label: '连续天数',
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: cardW,
-                      child: StatCard(
-                        icon: '⏰',
-                        iconBg: context.palette.warningBg,
-                        value: () {
-                          final avg = state.averageTakeoffHour;
-                          return avg == null
-                              ? '--:--'
-                              : '${avg.toString().padLeft(2, '0')}:00';
-                        }(),
-                        label: '平均起飞时间',
+                      SizedBox(
+                        width: cardW,
+                        child: StatCard(
+                          icon: '⏰',
+                          iconBg: context.palette.warningBg,
+                          value: avgText,
+                          label: '平均起飞时间',
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: cardW,
-                      child: StatCard(
-                        icon: '🏆',
-                        iconBg: context.palette.infoBg,
-                        value: '${state.badges}',
-                        label: '徽章',
+                      SizedBox(
+                        width: cardW,
+                        child: StatCard(
+                          icon: '🏆',
+                          iconBg: context.palette.infoBg,
+                          value: '$badges',
+                          label: '徽章',
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          )),
+                    ],
+                  );
+                },
+              ),
+            );
+          }),
           SizedBox(height: r.gapXs),
           GestureDetector(
             onTap: ctrl.toggleDetail,
