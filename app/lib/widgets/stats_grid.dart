@@ -28,7 +28,7 @@ class StatCard extends StatelessWidget {
     return Container(
       padding: r.padAll(0.85),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
@@ -79,7 +79,7 @@ class StatCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: r.textXs,
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
               ],

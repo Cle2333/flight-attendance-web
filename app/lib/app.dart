@@ -12,15 +12,17 @@ class FlightAttendanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: '航班打卡',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      initialBinding: BindingsBuilder(() {
-        Get.put<AppState>(appState, permanent: true);
-      }),
-      home: const _Root(),
-    );
+    return Obx(() => GetMaterialApp(
+          title: '航班打卡',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: appState.themeMode.value,
+          initialBinding: BindingsBuilder(() {
+            Get.put<AppState>(appState, permanent: true);
+          }),
+          home: const _Root(),
+        ));
   }
 }
 
@@ -32,9 +34,9 @@ class _Root extends StatelessWidget {
     final state = Get.find<AppState>();
     return Obx(() {
       if (!state.booted.value) {
-        return const Scaffold(
-          backgroundColor: AppColors.bg,
-          body: Center(child: CircularProgressIndicator()),
+        return Scaffold(
+          backgroundColor: context.palette.bg,
+          body: const Center(child: CircularProgressIndicator()),
         );
       }
       final hasSession =

@@ -36,7 +36,7 @@ class RecordDetailScreen extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: context.palette.card,
                   borderRadius: BorderRadius.circular(r.radiusLg),
                   boxShadow: [
                     BoxShadow(
@@ -52,12 +52,12 @@ class RecordDetailScreen extends StatelessWidget {
                       label: '起飞时间',
                       value: DateFormatters.timeFull(t),
                     ),
-                    Divider(height: 1, color: AppColors.border),
+                    Divider(height: 1, color: context.palette.border),
                     _DetailRow(
                       label: '感受',
                       value: r0.note.isEmpty ? '（无）' : r0.note,
                     ),
-                    Divider(height: 1, color: AppColors.border),
+                    Divider(height: 1, color: context.palette.border),
                     Padding(
                       padding: r.padAll(1.0),
                       child: Row(
@@ -67,13 +67,13 @@ class RecordDetailScreen extends StatelessWidget {
                             '状态',
                             style: TextStyle(
                               fontSize: r.textBase,
-                              color: AppColors.textSecondary,
+                              color: context.palette.textSecondary,
                             ),
                           ),
                           Container(
                             padding: r.padHV(0.5, 0.2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
+                              color: context.palette.successBg,
                               borderRadius: BorderRadius.circular(r.radiusXl),
                             ),
                             child: Text(
@@ -81,7 +81,7 @@ class RecordDetailScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: r.textXs,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF16A34A),
+                                color: context.palette.successText,
                               ),
                             ),
                           ),
@@ -171,7 +171,7 @@ class _DetailRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: r.textBase,
-              color: AppColors.textSecondary,
+              color: context.palette.textSecondary,
             ),
           ),
           SizedBox(width: r.gapMd),

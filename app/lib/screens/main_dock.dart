@@ -33,9 +33,10 @@ class MainDock extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: r.gapMd),
       height: r.navBarH,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9).withValues(alpha: 0.72),
+        // 用 palette token，light/dark 各自走自己的 dockBg(都是 0.72 alpha)
+        color: context.palette.dockBg.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(r.radiusXl),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+        border: Border.all(color: context.palette.dockBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -87,14 +88,14 @@ class DockTab extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 选中态的背景胶囊
+          // 选中态的背景胶囊 —— light 用 card(白)，dark 用 surfaceMuted
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             width: active ? r.gapXl * 1.4 : 0,
             height: r.buttonHsm,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: active ? context.palette.card : Colors.transparent,
               borderRadius: BorderRadius.circular(r.radiusMd),
               boxShadow: active
                   ? [
@@ -114,7 +115,7 @@ class DockTab extends StatelessWidget {
               Icon(
                 icon,
                 size: r.iconMd,
-                color: active ? AppColors.primary : AppColors.textLight,
+                color: active ? AppColors.primary : context.palette.textLight,
               ),
               SizedBox(height: r.gap2xs),
               Text(
@@ -122,7 +123,7 @@ class DockTab extends StatelessWidget {
                 style: TextStyle(
                   fontSize: r.textXs,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                  color: active ? AppColors.primary : AppColors.textLight,
+                  color: active ? AppColors.primary : context.palette.textLight,
                 ),
               ),
             ],

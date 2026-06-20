@@ -36,7 +36,7 @@ class _EditRecordModalState extends State<EditRecordModal> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
+      backgroundColor: context.palette.card,
       child: Padding(
         padding: r.padAll(1.5),
         child: Column(

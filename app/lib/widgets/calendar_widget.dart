@@ -46,7 +46,7 @@ class CalendarWidget extends StatelessWidget {
       margin: r.padH(1.4),
       padding: r.padAll(1.125),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
@@ -135,14 +135,14 @@ class CalendarWidget extends StatelessWidget {
         width: r.touchTarget * 0.85,
         height: r.touchTarget * 0.85,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.border),
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: TextStyle(
-            color: AppColors.textSecondary,
+            color: context.palette.textSecondary,
             fontSize: r.textBase,
           ),
         ),
@@ -181,7 +181,7 @@ class CalendarWidget extends StatelessWidget {
                       fontSize: r.textXs,
                       color: isToday
                           ? Colors.white.withValues(alpha: 0.8)
-                          : AppColors.textLight,
+                          : context.palette.textLight,
                     ),
                   ),
                   SizedBox(height: r.gapXs * 0.5),
@@ -190,7 +190,7 @@ class CalendarWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: r.textLg,
                       fontWeight: FontWeight.w600,
-                      color: isToday ? Colors.white : AppColors.text,
+                      color: isToday ? Colors.white : context.palette.text,
                     ),
                   ),
                   SizedBox(height: r.gapXs * 0.5),
@@ -235,7 +235,7 @@ class CalendarWidget extends StatelessWidget {
                       l,
                       style: TextStyle(
                         fontSize: r.textXs,
-                        color: AppColors.textLight,
+                        color: context.palette.textLight,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -279,7 +279,7 @@ class CalendarWidget extends StatelessWidget {
                             style: TextStyle(
                               fontSize: r.textSm,
                               fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
-                              color: isToday ? Colors.white : AppColors.text,
+                              color: isToday ? Colors.white : context.palette.text,
                             ),
                           ),
                         ),

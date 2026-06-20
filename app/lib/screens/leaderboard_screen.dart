@@ -32,7 +32,7 @@ class LeaderboardScreen extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.all(r.gap2xs),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: context.palette.surfaceMuted,
                 borderRadius: BorderRadius.circular(r.radiusMd),
               ),
               child: Obx(() => Row(
@@ -71,7 +71,7 @@ class LeaderboardScreen extends StatelessWidget {
                       '登录账号后可使用排行榜功能',
                       style: TextStyle(
                         fontSize: r.textBase,
-                        color: AppColors.textLight,
+                        color: context.palette.textLight,
                       ),
                     ),
                   ],
@@ -100,7 +100,7 @@ class LeaderboardScreen extends StatelessWidget {
                 padding: EdgeInsets.all(r.gapXl),
                 child: Center(
                   child: Text('暂无数据',
-                      style: TextStyle(color: AppColors.textLight)),
+                      style: TextStyle(color: context.palette.textLight)),
                 ),
               );
             }
@@ -145,7 +145,7 @@ class _Tab extends StatelessWidget {
           height: r.buttonHsm,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: active ? AppColors.card : Colors.transparent,
+            color: active ? context.palette.card : Colors.transparent,
             borderRadius: BorderRadius.circular(r.radiusSm),
             boxShadow: active
                 ? [
@@ -162,7 +162,7 @@ class _Tab extends StatelessWidget {
             style: TextStyle(
               fontSize: r.textBase,
               fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-              color: active ? AppColors.text : AppColors.textSecondary,
+              color: active ? context.palette.text : context.palette.textSecondary,
             ),
           ),
         ),
@@ -290,11 +290,11 @@ class _LbItem extends StatelessWidget {
     final r = context.r;
     final color = rank - 1 < _colors.length
         ? _colors[rank - 1]
-        : const Color(0xFFE2E8F0);
+        : context.palette.surfaceMuted;
     return Container(
       padding: r.padAll(0.875),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(r.radiusLg),
         boxShadow: [
           BoxShadow(
@@ -314,7 +314,7 @@ class _LbItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: r.textLg,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
+                color: context.palette.textSecondary,
               ),
             ),
           ),
@@ -349,7 +349,7 @@ class _LbItem extends StatelessWidget {
                   '✈️ ${entry.count} 次起飞',
                   style: TextStyle(
                     fontSize: r.textXs,
-                    color: AppColors.textSecondary,
+                    color: context.palette.textSecondary,
                   ),
                 ),
               ],

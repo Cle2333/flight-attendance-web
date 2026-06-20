@@ -63,7 +63,7 @@ class RecordsScreen extends StatelessWidget {
                       width: cardW,
                       child: StatCard(
                         icon: '✈️',
-                        iconBg: AppColors.primaryBg,
+                        iconBg: context.palette.primaryBg,
                         value: '${state.totalRecords}',
                         label: '总起飞次数',
                       ),
@@ -72,7 +72,7 @@ class RecordsScreen extends StatelessWidget {
                       width: cardW,
                       child: StatCard(
                         icon: '🔥',
-                        iconBg: const Color(0xFFF0FDF4),
+                        iconBg: context.palette.successBg,
                         value: '${state.currentStreak}',
                         label: '连续天数',
                       ),
@@ -81,7 +81,7 @@ class RecordsScreen extends StatelessWidget {
                       width: cardW,
                       child: StatCard(
                         icon: '⏰',
-                        iconBg: const Color(0xFFFFFBEB),
+                        iconBg: context.palette.warningBg,
                         value: () {
                           final avg = state.averageTakeoffHour;
                           return avg == null
@@ -95,7 +95,7 @@ class RecordsScreen extends StatelessWidget {
                       width: cardW,
                       child: StatCard(
                         icon: '🏆',
-                        iconBg: const Color(0xFFFAF5FF),
+                        iconBg: context.palette.infoBg,
                         value: '${state.badges}',
                         label: '徽章',
                       ),
@@ -113,7 +113,7 @@ class RecordsScreen extends StatelessWidget {
                   margin: r.padHV(1.4, 0.8),
                   padding: r.padHV(1.0, 1.0),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: context.palette.card,
                     borderRadius: BorderRadius.circular(r.radiusLg),
                     boxShadow: [
                       BoxShadow(
@@ -164,7 +164,7 @@ class RecordsScreen extends StatelessWidget {
                               child: Center(
                                 child: Text(
                                   '暂无记录',
-                                  style: TextStyle(color: AppColors.textLight),
+                                  style: TextStyle(color: context.palette.textLight),
                                 ),
                               ),
                             )
@@ -179,7 +179,7 @@ class RecordsScreen extends StatelessWidget {
                                       entry.key,
                                       style: TextStyle(
                                         fontSize: r.textXs,
-                                        color: AppColors.textSecondary,
+                                        color: context.palette.textSecondary,
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: 0.5,
                                       ),
@@ -220,7 +220,7 @@ class _RecordItem extends StatelessWidget {
     final t = DateFormatters.timeHM(record.time);
     final noteText = record.note.isEmpty ? '' : ' · ${record.note}';
     return Material(
-      color: AppColors.card,
+      color: context.palette.card,
       borderRadius: BorderRadius.circular(r.radiusLg),
       child: InkWell(
         borderRadius: BorderRadius.circular(r.radiusLg),
@@ -243,7 +243,7 @@ class _RecordItem extends StatelessWidget {
                 width: r.touchTarget * 1.2,
                 height: r.touchTarget * 1.2,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBg,
+                  color: context.palette.primaryBg,
                   borderRadius: BorderRadius.circular(r.radiusSm),
                 ),
                 alignment: Alignment.center,
@@ -266,7 +266,7 @@ class _RecordItem extends StatelessWidget {
                       '$t$noteText',
                       style: TextStyle(
                         fontSize: r.textXs,
-                        color: AppColors.textSecondary,
+                        color: context.palette.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -277,7 +277,7 @@ class _RecordItem extends StatelessWidget {
               Container(
                 padding: r.padHV(0.5, 0.2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
+                  color: context.palette.successBg,
                   borderRadius: BorderRadius.circular(r.radiusXl),
                 ),
                 child: Text(
@@ -285,7 +285,7 @@ class _RecordItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: r.textXs,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF16A34A),
+                    color: context.palette.successText,
                   ),
                 ),
               ),

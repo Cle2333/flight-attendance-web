@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../api/api_client.dart' show ApiClient;
@@ -38,6 +39,14 @@ class AppState extends GetxController {
 
   // ====== 起飞 ======
   final Rxn<DateTime> lastTakeoff = Rxn<DateTime>();
+
+  // ====== 主题 ======
+  /// 主题模式 —— light / dark / system
+  final Rx<ThemeMode> themeMode = ThemeMode.system.obs;
+
+  void setThemeMode(ThemeMode m) {
+    themeMode.value = m;
+  }
 
   /// 应用启动 —— 不抛异常，永远完成
   Future<void> bootstrap() async {

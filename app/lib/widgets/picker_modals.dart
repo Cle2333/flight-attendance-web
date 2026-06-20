@@ -27,66 +27,72 @@ class _AvatarPickerState extends State<AvatarPicker> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
-      child: Padding(
-        padding: r.padAll(1.25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              '选择头像',
-              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
-            ),
-            SizedBox(height: r.gapMd),
-            GridView.count(
-              crossAxisCount: 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: r.gapSm,
-              crossAxisSpacing: r.gapSm,
-              children: AvatarPicker._emojis.map((e) {
-                final isSelected = e == _selected;
-                return InkWell(
-                  onTap: () => setState(() => _selected = e),
-                  borderRadius: BorderRadius.circular(r.radiusSm),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryBg : Colors.white,
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                        width: 2,
+      backgroundColor: context.palette.card,
+      // 限制最大宽 + childAspectRatio:1.5，避免桌面端 GridView
+      // 把格子拉成正方大块撑爆对话框
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Padding(
+          padding: r.padAll(1.25),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '选择头像',
+                style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: r.gapMd),
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: 1.5, // 格子宽于高
+                mainAxisSpacing: r.gapSm,
+                crossAxisSpacing: r.gapSm,
+                children: AvatarPicker._emojis.map((e) {
+                  final isSelected = e == _selected;
+                  return InkWell(
+                    onTap: () => setState(() => _selected = e),
+                    borderRadius: BorderRadius.circular(r.radiusSm),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? context.palette.primaryBg : context.palette.card,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : context.palette.border,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(r.radiusSm),
                       ),
-                      borderRadius: BorderRadius.circular(r.radiusSm),
+                      alignment: Alignment.center,
+                      child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: r.gapMd),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('取消'),
+                    ),
                   ),
-                );
-              }).toList(),
-            ),
-            SizedBox(height: r.gapMd),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('取消'),
+                  SizedBox(width: r.gapSm),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        widget.onPick(_selected);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('保存'),
+                    ),
                   ),
-                ),
-                SizedBox(width: r.gapSm),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      widget.onPick(_selected);
-                      Navigator.pop(context);
-                    },
-                    child: const Text('保存'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -113,66 +119,72 @@ class _EffectEmojiPickerState extends State<EffectEmojiPicker> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
-      child: Padding(
-        padding: r.padAll(1.25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              '起飞特效 Emoji',
-              style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
-            ),
-            SizedBox(height: r.gapMd),
-            GridView.count(
-              crossAxisCount: 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: r.gapSm,
-              crossAxisSpacing: r.gapSm,
-              children: EffectEmojiPicker._emojis.map((e) {
-                final isSelected = e == _selected;
-                return InkWell(
-                  onTap: () => setState(() => _selected = e),
-                  borderRadius: BorderRadius.circular(r.radiusSm),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primaryBg : Colors.white,
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                        width: 2,
+      backgroundColor: context.palette.card,
+      // 限制最大宽 + childAspectRatio:1.5，避免桌面端 GridView
+      // 把格子拉成正方大块撑爆对话框
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Padding(
+          padding: r.padAll(1.25),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '起飞特效 Emoji',
+                style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: r.gapMd),
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: 1.5, // 格子宽于高
+                mainAxisSpacing: r.gapSm,
+                crossAxisSpacing: r.gapSm,
+                children: EffectEmojiPicker._emojis.map((e) {
+                  final isSelected = e == _selected;
+                  return InkWell(
+                    onTap: () => setState(() => _selected = e),
+                    borderRadius: BorderRadius.circular(r.radiusSm),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? context.palette.primaryBg : context.palette.card,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : context.palette.border,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(r.radiusSm),
                       ),
-                      borderRadius: BorderRadius.circular(r.radiusSm),
+                      alignment: Alignment.center,
+                      child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(e, style: TextStyle(fontSize: r.text2xl * 1.3)),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: r.gapMd),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('取消'),
+                    ),
                   ),
-                );
-              }).toList(),
-            ),
-            SizedBox(height: r.gapMd),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('取消'),
+                  SizedBox(width: r.gapSm),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        widget.onPick(_selected);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('保存'),
+                    ),
                   ),
-                ),
-                SizedBox(width: r.gapSm),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      widget.onPick(_selected);
-                      Navigator.pop(context);
-                    },
-                    child: const Text('保存'),
-                  ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -197,7 +209,7 @@ class _PrecisionPickerState extends State<PrecisionPicker> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
+      backgroundColor: context.palette.card,
       child: Padding(
         padding: r.padAll(1.25),
         child: Column(
@@ -277,7 +289,7 @@ class _NicknameEditorState extends State<NicknameEditor> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
+      backgroundColor: context.palette.card,
       child: Padding(
         padding: r.padAll(1.25),
         child: Column(
@@ -370,7 +382,7 @@ class _QuotesEditorState extends State<QuotesEditor> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
+      backgroundColor: context.palette.card,
       child: Padding(
         padding: r.padAll(1.25),
         child: Column(
@@ -471,7 +483,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
     final r = context.r;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r.radiusLg)),
-      backgroundColor: AppColors.card,
+      backgroundColor: context.palette.card,
       child: Padding(
         padding: r.padAll(1.25),
         child: Column(
@@ -485,7 +497,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
             SizedBox(height: r.gapXs),
             Text(
               'Android 模拟器请用 10.0.2.2，真机请用局域网 IP',
-              style: TextStyle(fontSize: r.textXs, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: r.textXs, color: context.palette.textSecondary),
             ),
             SizedBox(height: r.gapSm),
             TextField(

@@ -62,7 +62,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
               SizedBox(height: r.gapXs),
               Text(
                 'Android 模拟器用 10.0.2.2，真机请填局域网 IP',
-                style: TextStyle(fontSize: r.textSm, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: r.textSm, color: context.palette.textSecondary),
               ),
               SizedBox(height: r.gapMd),
               TextField(

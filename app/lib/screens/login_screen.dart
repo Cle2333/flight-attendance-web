@@ -15,7 +15,7 @@ class LoginScreen extends StatelessWidget {
     final ctrl = Get.put(LoginController());
     final r = context.r;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: r.palette.bg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -70,7 +70,7 @@ class LoginScreen extends StatelessWidget {
                         '记录每一次起飞',
                         style: TextStyle(
                           fontSize: r.textBase,
-                          color: AppColors.textSecondary,
+                          color: context.palette.textSecondary,
                         ),
                       ),
                       SizedBox(height: r.gap2xl),
@@ -112,11 +112,11 @@ class LoginScreen extends StatelessWidget {
                           Row(
                             children: [
                               Icon(Icons.check_box,
-                                  size: r.iconSm, color: AppColors.textSecondary),
+                                  size: r.iconSm, color: context.palette.textSecondary),
                               SizedBox(width: r.gapXs * 0.6),
                               Text('记住我',
                                   style: TextStyle(
-                                      color: AppColors.textSecondary,
+                                      color: context.palette.textSecondary,
                                       fontSize: r.textSm)),
                             ],
                           ),
@@ -175,8 +175,8 @@ class LoginScreen extends StatelessWidget {
                           icon: const Text('📱'),
                           label: const Text('本地模式（无需登录）'),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            foregroundColor: AppColors.textSecondary,
+                            backgroundColor: context.palette.surfaceMuted,
+                            foregroundColor: context.palette.textSecondary,
                             minimumSize: Size.fromHeight(r.buttonHsm),
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(
@@ -195,7 +195,7 @@ class LoginScreen extends StatelessWidget {
               child: SafeArea(
                 child: IconButton(
                   icon: Icon(Icons.settings_outlined,
-                      size: r.iconMd, color: AppColors.textLight),
+                      size: r.iconMd, color: context.palette.textLight),
                   onPressed: () => Get.to(() => const ServerConfigScreen()),
                 ),
               ),

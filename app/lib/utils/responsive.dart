@@ -1,4 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+import '../theme/app_theme.dart';
 
 /// 响应式工具 -- 所有尺寸都用"屏幕宽度的分数"推导,clamp 在合理范围。
 ///
@@ -26,6 +30,10 @@ class Responsive {
   double get width => size.width;
   double get height => size.height;
 
+  // ── 主题调色板(跟随 light/dark)─────────────────────────────────
+  AppPalette get palette =>
+      Theme.of(context).extension<AppPalette>() ?? AppPalette.light;
+
   // ── 断点(Material 3)──────────────────────────────────
   bool get isCompact => width < 600;
   bool get isMedium => width >= 600 && width < 1024;
@@ -36,7 +44,9 @@ class Responsive {
   // ── 缩放因子 ────────────────────────────────────────────
   static const double _refW = 390.0; // 基准宽度
   double get _scale => (width / _refW).clamp(0.85, 1.6);
-  double get _scaleBig => isDesktop ? (width / _refW).clamp(0.85, 1.05) : (width / _refW).clamp(0.85, 1.4); // 字体用:桌面压上限到 1.05 防止溢出,移动端 1.4
+  double get _scaleBig => isDesktop
+      ? (width / _refW).clamp(0.85, 1.05)
+      : (width / _refW).clamp(0.85, 1.4); // 字体用:桌面压上限到 1.05 防止溢出,移动端 1.4
   double get _scaleIcon => (width / _refW).clamp(0.9, 1.5); // 图标用
 
   // ── gap(间距)──────────────────────────────────────────
@@ -72,7 +82,8 @@ class Responsive {
   double get text2xl => 24.0 * _scaleBig; // ~21 ~ 33
   double get text3xl => 28.0 * _scaleBig; // ~24 ~ 39
   double get text4xl => 36.0 * _scaleBig; // ~31 ~ 50
-  double get textDisplay => 64.0 * _scaleBig.clamp(0.85, 1.1); // 倒计时大字:上限更紧,避免桌面放大过头撑爆 overlay
+  double get textDisplay =>
+      64.0 * _scaleBig.clamp(0.85, 1.1); // 倒计时大字:上限更紧,避免桌面放大过头撑爆 overlay
 
   // ── icon(图标)──────────────────────────────────────────
   double get iconXs => 14.0 * _scaleIcon; // ~13 ~ 21
@@ -87,7 +98,14 @@ class Responsive {
   double get buttonH => _gapUnit * 3.25; // 主按钮高度,45-91
   double get buttonHsm => _gapUnit * 2.5; // 次按钮,35-70
   double get inputH => _gapUnit * 3.0; // 输入框高度,42-84
-  double get navBarH => _gapUnit * 4.0; // 底部导航,56-112
+  /// 底部导航(dock)高度 —— 单独按宽度算，不再走 _gapUnit(后者会被
+  /// clamp 到 28，把桌面端钉死在 112)。
+  ///
+  /// 下限 56 保持小屏触感，ratio 0.06 跟屏幕走：
+  ///   - 1024 屏:max(56, 61) = 61
+  ///   - 1440 屏:max(56, 86) = 86
+  ///   - 1920 屏:max(56, 115) = 115
+  double get navBarH => math.max(56.0, width * 0.06);
 
   double get avatarSm => _gapUnit * 2.25; // 小头像,31-63
   double get avatarMd => _gapUnit * 3.0; // 中头像,42-84
@@ -113,8 +131,9 @@ class Responsive {
   EdgeInsets get screenPaddingH =>
       EdgeInsets.symmetric(horizontal: _gapUnit * 1.4);
 
-  /// 底部安全留白（avoid 被 bottom nav 遮挡；现 extendBody:true 下 dock 会浮在上层，不需额外占位）
-  // 不再提供 bottomNavSafeGap，dock 盖在 body 上面，无需预留。
+  /// 底部安全留白 — 当前 main_navigation 用 extendBody:false,
+  /// Scaffold 自动让 body 停在 dock 上方,这里只用于参考/历史。
+  // 不再提供 bottomNavSafeGap。
 
   // ── 桌面端容器 ──────────────────────────────────────────
   /// 主内容最大宽 —— 移动端保持手机列宽,桌面端放宽以铺展开。
@@ -123,9 +142,14 @@ class Responsive {
   double get contentMaxWidth => isDesktop ? 1200.0 : 480.0;
   double get contentMaxWidthWide => 720.0; // 兼容旧代码 / 平板
 
-  /// 紧凑面板最大宽 —— 底部 dock、桌面端侧栏卡片等都走这个,
-  /// 让"窄浮动 UI"在宽屏上也不会被拉到全宽。
-  double get compactPanelMaxWidth => 480.0;
+  /// 紧凑面板最大宽 —— 底部 dock、桌面端侧栏卡片等都走这个。
+  ///
+  /// 下限 480(手机列宽基准,保证 4 个 tab 不挤),比例 0.5 跟屏幕宽度走。
+  ///   - 1024 屏:max(480, 512) = 512
+  ///   - 1440 屏:max(480, 720) = 720
+  ///   - 1920 屏:max(480, 960) = 960
+  /// dock 在宽屏上是横向延展的药丸，而不是挤在中间的小药丸。
+  double get compactPanelMaxWidth => 480;
 
   /// body 末端需要给 dock 留的高度 = dock 自身高 + 一段安全间距。
   /// 配合 Scaffold(extendBody: true),body 不会被 dock 遮挡。
@@ -175,7 +199,9 @@ class CenteredFrame extends StatelessWidget {
         // 用 Padding 代替 Align 在无界高度的父容器里也不会出错。
         // SizedBox 强制子组件拿到紧密宽度约束,下游 Stack/Column 才知道多宽。
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: hMargin.clamp(0.0, double.infinity)),
+          padding: EdgeInsets.symmetric(
+            horizontal: hMargin.clamp(0.0, double.infinity),
+          ),
           child: SizedBox(
             width: targetW,
             child: padding == null

@@ -116,23 +116,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Stack(
       children: [
-        // Positioned.fill + CenteredFrame —— 桌面端让内容居中在
-        // contentMaxWidth(1200) 内,左右留白;手机端 min(<480) 铺满。
+        // Positioned.fill —— 不再套 CenteredFrame,让桌面端主内容
+        // 铺满整个 IndexedStack 宽度。内部 Column 用 crossAxisAlignment:
+        // center 居中,空白从两侧流出,看上去仍是居中的。
         Positioned.fill(
           child: GestureDetector(
             onTapUp: _handleTap,
             behavior: HitTestBehavior.opaque,
-            child: CenteredFrame(
-              maxWidth: r.contentMaxWidth,
-              child: Container(
-                color: Colors.transparent,
-                child: SafeArea(
-                  bottom: false,
-                  child: r.isDesktop
-                      ? _buildDesktopLayout(r, state)
-                      : _buildMobileLayout(r, state),
-                ),
-              ),
+            child: SafeArea(
+              bottom: false,
+              child: r.isDesktop
+                  ? _buildDesktopLayout(r, state)
+                  : _buildMobileLayout(r, state),
             ),
           ),
         ),
@@ -179,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _greeting(),
                     style: TextStyle(
                       fontSize: r.textXl,
-                      color: AppColors.textSecondary,
+                      color: context.palette.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -222,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 '距离上次起飞',
                 style: TextStyle(
                   fontSize: r.textLg,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               SizedBox(height: r.gapSm),
@@ -257,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: r.textBase,
-                  color: AppColors.textLight,
+                  color: context.palette.textLight,
                 ),
               ),
             );
@@ -294,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _greeting(),
               style: TextStyle(
                 fontSize: r.textXl,
-                color: AppColors.textSecondary,
+                color: context.palette.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -342,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 '距离上次起飞',
                 style: TextStyle(
                   fontSize: r.textLg,
-                  color: AppColors.textSecondary,
+                  color: context.palette.textSecondary,
                 ),
               ),
               SizedBox(height: r.gapSm),
@@ -380,7 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: r.textBase,
-                      color: AppColors.textLight,
+                      color: context.palette.textLight,
                     ),
                   ),
                 );
