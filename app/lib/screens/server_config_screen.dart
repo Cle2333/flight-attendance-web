@@ -61,7 +61,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
               ),
               SizedBox(height: r.gapXs),
               Text(
-                'Android 模拟器用 10.0.2.2，真机请填局域网 IP',
+                '默认 https://flight.cmach.qzz.io；本地调试可改局域网 IP',
                 style: TextStyle(fontSize: r.textSm, color: context.palette.textSecondary),
               ),
               SizedBox(height: r.gapMd),
@@ -69,7 +69,7 @@ class _ServerConfigScreenState extends State<ServerConfigScreen> {
                 controller: _ctrl,
                 keyboardType: TextInputType.url,
                 decoration: const InputDecoration(
-                  hintText: 'http://192.168.1.100:8080',
+                  hintText: 'https://flight.cmach.qzz.io',
                 ),
               ),
               SizedBox(height: r.gapLg),

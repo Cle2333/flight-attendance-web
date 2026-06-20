@@ -496,7 +496,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
             ),
             SizedBox(height: r.gapXs),
             Text(
-              'Android 模拟器请用 10.0.2.2，真机请用局域网 IP',
+              '默认 https://flight.cmach.qzz.io',
               style: TextStyle(fontSize: r.textXs, color: context.palette.textSecondary),
             ),
             SizedBox(height: r.gapSm),
@@ -504,7 +504,7 @@ class _ServerConfigModalState extends State<ServerConfigModal> {
               controller: _ctrl,
               keyboardType: TextInputType.url,
               decoration: const InputDecoration(
-                hintText: 'http://192.168.1.100:8080',
+                hintText: 'https://flight.cmach.qzz.io',
               ),
             ),
             SizedBox(height: r.gapMd),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -207,26 +209,34 @@ class AppState extends GetxController {
   }
 
   // ====== 起飞 ======
+  /// 双击起飞。乐观更新：立刻本地插入一条 record(返回给调用方进行 UI 反馈)，
+  /// 云端同步放到后台，不阻塞前台交互。
   Future<FlightRecord> takeOff() async {
     final now = DateTime.now();
-    if (isLocalMode.value) {
-      return _takeOffLocal(now);
+    // 1. 先本地插入 —— UI 立刻拿到 record，粒子/成功提示正常触发
+    final record = _takeOffLocal(now);
+
+    // 2. 后台同步到服务器
+    if (!isLocalMode.value) {
+      unawaited(_syncRecordToCloud(record));
     }
+
+    return record;
+  }
+
+  /// 后台同步单条记录到服务器。失败仅置 offline=true(记录已在本地)。
+  Future<void> _syncRecordToCloud(FlightRecord local) async {
     try {
-      await api.addRecord(now, '');
-      await refreshAll();
-      return records.last;
+      await api.addRecord(local.time, '');
+      // 同步成功可选：静默 re-fetch 对账 id（不 await，不阻塞）
+      // 这里暂时不动本地记录 — 后续 dashboard 刷新会拉到服务器的真实 id
     } on ApiException catch (e) {
-      // 网络挂了 —— 自动降级到本地打卡，不让用户操作失败
       if (e.statusCode != null && e.statusCode! >= 500) {
         offline.value = true;
-        return _takeOffLocal(now);
       }
-      // 401/403/400 让上层报错
-      rethrow;
+      // 4xx 不当作离线(请求本身有问题)
     } catch (_) {
       offline.value = true;
-      return _takeOffLocal(now);
     }
   }
 

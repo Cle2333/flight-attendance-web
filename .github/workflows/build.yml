@@ -128,10 +128,133 @@ jobs:
           if-no-files-found: ignore
           retention-days: 90
 
+  # ============== App (Flutter Linux) ==============
+  build-linux:
+    name: App · build Linux
+    needs: [analyze]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Linux build deps (GTK 3 + toolchain)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Linux release
+        working-directory: app
+        run: flutter build linux --release
+
+      - name: Package as .deb
+        working-directory: app
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -e
+          VERSION="${TAG_NAME#v}"              # v1.0.0 → 1.0.0
+          APP=flight-attendance-app
+          STAGE="${RUNNER_TEMP}/debroot"
+          BUNDLE=build/linux/x64/release/bundle
+
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/DEBIAN"
+          mkdir -p "$STAGE/opt/${APP}"
+          cp -r "${BUNDLE}/"* "$STAGE/opt/${APP}/"
+
+          cat > "$STAGE/DEBIAN/control" <<EOF
+          Package: ${APP}
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: cmach_socket <cmach_socket@outlook.com>
+          Depends: libgtk-3-0, liblzma5
+          Description: 航班打卡 - 记录每一次起飞
+           Flutter desktop app for tracking flight attendance.
+          EOF
+
+          # 安装时：放可执行权限 + 软链到 PATH
+          cat > "$STAGE/DEBIAN/postinst" <<'EOS'
+          #!/bin/sh
+          set -e
+          chmod +x /opt/flight-attendance-app/flight_attendance_app
+          ln -sf /opt/flight-attendance-app/flight_attendance_app /usr/local/bin/flight-attendance-app
+          EOS
+          chmod 755 "$STAGE/DEBIAN/postinst"
+
+          # 卸载时：清掉软链
+          cat > "$STAGE/DEBIAN/prerm" <<'EOS'
+          #!/bin/sh
+          set -e
+          rm -f /usr/local/bin/flight-attendance-app
+          EOS
+          chmod 755 "$STAGE/DEBIAN/prerm"
+
+          # 打包
+          OUT="${APP}_${VERSION}_amd64.deb"
+          dpkg-deb --build --root-owner-group "$STAGE" "$OUT"
+
+          # 放回稳定路径供 upload-artifact
+          mkdir -p build/linux/x64/release
+          cp "$OUT" build/linux/x64/release/
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-linux
+          path: app/build/linux/x64/release/flight-attendance-app_*_amd64.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  # ============== App (Flutter Windows) ==============
+  build-windows:
+    name: App · build Windows
+    needs: [analyze]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Windows release
+        working-directory: app
+        run: flutter build windows --release
+
+      - name: Zip bundle
+        shell: pwsh
+        working-directory: app/build/windows/runner/Release
+        run: |
+          Compress-Archive -Path ./* -DestinationPath ../../../../x64/Release/flight-attendance-app-windows-x64.zip
+
+      - name: Upload Windows archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-windows
+          path: app/build/windows/x64/Release/flight-attendance-app-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+
   # ============== Release (仅 tag 触发) ==============
   release:
     name: GitHub Release
-    needs: [server, build-apk]
+    needs: [server, build-apk, build-linux, build-windows]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -147,6 +270,18 @@ jobs:
           name: app-release
           path: dist/app
 
+      - name: Download Linux archive
+        uses: actions/download-artifact@v4
+        with:
+          name: app-linux
+          path: dist/app/linux
+
+      - name: Download Windows archive
+        uses: actions/download-artifact@v4
+        with:
+          name: app-windows
+          path: dist/app/windows
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -157,3 +292,5 @@ jobs:
           files: |
             dist/server/flight-attendance-server.jar
             dist/app/app-release.apk
+            dist/app/linux/flight-attendance-app_*.deb
+            dist/app/windows/flight-attendance-app-windows-x64.zip

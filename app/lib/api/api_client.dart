@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 
 import '../models/record.dart';
@@ -47,11 +46,8 @@ class ApiClient {
   }
 
   static String _defaultBaseUrl() {
-    // Android 模拟器访问宿主机用 10.0.2.2，其他平台用 localhost
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:8080';
-    }
-    return 'http://localhost:8080';
+    // 默认走公网 HTTPS 域名。如果用户在「服务器设置」里改了地址就以那个为准。
+    return 'https://flight.cmach.qzz.io';
   }
 
   Future<void> updateBaseUrl(String url) async {
