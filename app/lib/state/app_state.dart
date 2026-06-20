@@ -469,7 +469,10 @@ class AppState extends GetxController {
     }
   }
 
-  // ====== 派生 ======
+  // ====== 派生（getter）======
+  // ⚠️ 这些不是 Rx。GetX 不会自动追踪它们。
+  //    UI 里使用时**必须**包在 Obx(() => ...)，否则值变了 UI 不重画。
+  //    例子：Obx(() => Text('${state.totalRecords}'))
   int get totalRecords => records.length;
 
   int get currentStreak {

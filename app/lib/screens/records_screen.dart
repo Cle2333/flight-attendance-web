@@ -47,7 +47,9 @@ class RecordsScreen extends StatelessWidget {
               style: TextStyle(fontSize: r.textLg, fontWeight: FontWeight.w700),
             ),
           ),
-          Padding(
+          // ⚠️ 必须包 Obx：getter 读 records.length，records 是 RxList，
+          // 没 Obx 永远不刷新。
+          Obx(() => Padding(
             padding: r.padH(1.4),
             // Wrap 代替 GridView —— 卡片高度跟 StatCard 自身内容走,
             // 不再用硬编码的 childAspectRatio 撑高。
@@ -104,7 +106,7 @@ class RecordsScreen extends StatelessWidget {
                 );
               },
             ),
-          ),
+          )),
           SizedBox(height: r.gapXs),
           GestureDetector(
             onTap: ctrl.toggleDetail,
