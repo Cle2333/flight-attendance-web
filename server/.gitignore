@@ -37,6 +37,7 @@ build/
 logs/
 
 ### Secrets ###
+application-config.yml
 application-local.yml
 application-local.*.yml
 .env
