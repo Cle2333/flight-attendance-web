@@ -24,12 +24,17 @@ class ApiClient {
   final LocalStore store;
   String baseUrl;
   String? _token;
+  String? _refreshToken;
   http.Client _client;
+
+  /// 防 401 刷新时并发触发的 mutex
+  Future<bool>? _refreshFuture;
 
   ApiClient(this.store, {String? baseUrl})
       : baseUrl = baseUrl ?? _resolveBaseUrl(store),
         _client = http.Client() {
     _token = store.getToken();
+    _refreshToken = store.getRefreshToken();
   }
 
   /// 测试用：注入 mock http client（AppState.bootstrap 的离线场景用）
@@ -60,6 +65,8 @@ class ApiClient {
     _token = t;
   }
 
+  String? get refreshToken => _refreshToken;
+
   Map<String, String> _headers([bool needAuth = true]) {
     final h = <String, String>{'Content-Type': 'application/json'};
     if (needAuth && _token != null) {
@@ -75,8 +82,32 @@ class ApiClient {
     bool needAuth = true,
     Duration? timeout,
   }) async {
+    var data = await _rawRequest(method, path,
+        body: body, needAuth: needAuth, timeout: timeout);
+
+    // 401 + 有 refresh token → 尝试自动续期
+    if (data == null && needAuth && _refreshToken != null) {
+      final refreshed = await _tryRefresh();
+      if (refreshed) {
+        data = await _rawRequest(method, path,
+            body: body, needAuth: needAuth, timeout: timeout);
+      }
+    }
+
+    if (data == null) {
+      throw ApiException('未登录或 token 无效', statusCode: 401);
+    }
+    return data;
+  }
+
+  Future<Map<String, dynamic>?> _rawRequest(
+    String method,
+    String path, {
+    Map<String, dynamic>? body,
+    bool needAuth = true,
+    Duration? timeout,
+  }) async {
     final uri = Uri.parse('$baseUrl$path');
-    // 默认 8s 超时 —— 避免后端挂掉时启动黑屏 / 操作卡死
     final effectiveTimeout = timeout ?? const Duration(seconds: 8);
     http.Response res;
     try {
@@ -85,10 +116,12 @@ class ApiClient {
           res = await _client.get(uri, headers: _headers(needAuth)).timeout(effectiveTimeout);
           break;
         case 'POST':
-          res = await _client.post(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
+          res = await _client.post(uri, headers: _headers(needAuth),
+              body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
           break;
         case 'PUT':
-          res = await _client.put(uri, headers: _headers(needAuth), body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
+          res = await _client.put(uri, headers: _headers(needAuth),
+              body: body == null ? null : jsonEncode(body)).timeout(effectiveTimeout);
           break;
         case 'DELETE':
           res = await _client.delete(uri, headers: _headers(needAuth)).timeout(effectiveTimeout);
@@ -97,7 +130,6 @@ class ApiClient {
           throw ApiException('不支持的 HTTP 方法: $method');
       }
     } on TimeoutException {
-      // .timeout() 抛的 TimeoutException 优先于 _request 后面那个，避免被吞
       throw ApiException('请求超时');
     } on http.ClientException catch (e) {
       throw ApiException('网络错误: ${e.message}');
@@ -105,6 +137,11 @@ class ApiClient {
       throw ApiException('服务器响应格式错误: ${e.message}');
     } catch (e) {
       throw ApiException('请求失败: $e');
+    }
+
+    if (res.statusCode == 401) {
+      // 让上层走 refresh 逻辑
+      return null;
     }
 
     final bodyText = utf8.decode(res.bodyBytes);
@@ -123,51 +160,131 @@ class ApiClient {
     return data;
   }
 
+  /// 并发安全：多个 401 同时来只刷一次
+  Future<bool> _tryRefresh() async {
+    if (_refreshToken == null) return false;
+    final existing = _refreshFuture;
+    if (existing != null) return existing;
+    final fut = _doRefresh();
+    _refreshFuture = fut;
+    try {
+      return await fut;
+    } finally {
+      _refreshFuture = null;
+    }
+  }
+
+  Future<bool> _doRefresh() async {
+    try {
+      final uri = Uri.parse('$baseUrl/api/auth/refresh');
+      final res = await _client.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refreshToken': _refreshToken}),
+      ).timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) {
+        await _clearTokens();
+        return false;
+      }
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      if (data['success'] != true) {
+        await _clearTokens();
+        return false;
+      }
+      final d = data['data'] as Map<String, dynamic>;
+      _token = d['accessToken'] as String?;
+      _refreshToken = d['refreshToken'] as String?;
+      await store.setToken(_token);
+      await store.setRefreshToken(_refreshToken);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _clearTokens() async {
+    _token = null;
+    _refreshToken = null;
+    await store.setToken(null);
+    await store.setRefreshToken(null);
+    await store.setUser(null);
+  }
+
   // ==================== Auth ====================
   Future<AppUser> login(String account, String password) async {
-    final data = await _request(
-      'POST',
-      '/api/auth/login',
-      body: {'account': account, 'password': password},
-      needAuth: false,
-    );
-    final d = data['data'] as Map<String, dynamic>;
-    final token = d['token'] as String;
-    _token = token;
-    await store.setToken(token);
-    final u = AppUser(
-      id: (d['userId'] as num).toInt(),
-      account: d['account'] as String,
-      nickname: d['nickname'] as String? ?? account,
-    );
-    await store.setUser(u);
-    return u;
+    final data = await _rawPostNoAuth('/api/auth/login',
+        {'account': account, 'password': password});
+    return _persistAuthData(data, fallbackNickname: account);
   }
 
   Future<AppUser> register(String account, String password, String nickname) async {
-    final data = await _request(
-      'POST',
-      '/api/auth/register',
-      body: {'account': account, 'password': password, 'nickname': nickname},
-      needAuth: false,
-    );
+    final data = await _rawPostNoAuth('/api/auth/register',
+        {'account': account, 'password': password, 'nickname': nickname});
+    return _persistAuthData(data, fallbackNickname: nickname);
+  }
+
+  Future<Map<String, dynamic>> _rawPostNoAuth(String path, Map<String, dynamic> body) async {
+    final uri = Uri.parse('$baseUrl$path');
+    http.Response res;
+    try {
+      res = await _client.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 8));
+    } on TimeoutException {
+      throw ApiException('请求超时');
+    } on http.ClientException catch (e) {
+      throw ApiException('网络错误: ${e.message}');
+    }
+    final bodyText = utf8.decode(res.bodyBytes);
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(bodyText) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException('服务器返回非 JSON: ${res.statusCode}');
+    }
+    if (data['success'] != true) {
+      throw ApiException(
+        data['message'] as String? ?? '请求失败 (${res.statusCode})',
+        statusCode: res.statusCode,
+      );
+    }
+    return data;
+  }
+
+  AppUser _persistAuthData(Map<String, dynamic> data, {required String fallbackNickname}) {
     final d = data['data'] as Map<String, dynamic>;
-    final token = d['token'] as String;
-    _token = token;
-    await store.setToken(token);
+    _token = d['accessToken'] as String;
+    _refreshToken = d['refreshToken'] as String;
+    store.setToken(_token);
+    store.setRefreshToken(_refreshToken);
     final u = AppUser(
       id: (d['userId'] as num).toInt(),
       account: d['account'] as String,
-      nickname: d['nickname'] as String? ?? nickname,
+      nickname: d['nickname'] as String? ?? fallbackNickname,
+      role: d['role'] as String?,
     );
-    await store.setUser(u);
+    store.setUser(u);
     return u;
   }
 
   Future<void> logout() async {
-    _token = null;
-    await store.setToken(null);
-    await store.setUser(null);
+    final rt = _refreshToken;
+    // 先撤销服务器端 refresh token（best-effort，失败也清本地）
+    if (rt != null) {
+      try {
+        final uri = Uri.parse('$baseUrl/api/auth/logout');
+        await _client.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': rt}),
+        ).timeout(const Duration(seconds: 4));
+      } catch (_) {
+        // 忽略网络错误
+      }
+    }
+    await _clearTokens();
   }
 
   // ==================== User ====================
@@ -254,7 +371,7 @@ class ApiClient {
   }
 
   Future<AdminStats> getAdminStats() async {
-    final data = await _request('GET', '/api/admin/stats', needAuth: false);
+    final data = await _request('GET', '/api/admin/stats');
     return AdminStats.fromJson(data['data'] as Map<String, dynamic>);
   }
 }

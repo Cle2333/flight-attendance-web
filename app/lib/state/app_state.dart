@@ -209,6 +209,11 @@ class AppState extends GetxController {
   }
 
   // ====== 起飞 ======
+  /// 用户在 sync 完成前就点了「完成」加备注的现场。
+  /// 存住 localId → note，等 [takeOff] 那条 sync 返回 serverId 后补发 PUT。
+  /// 只有在云端模式下有意义，本地模式不会走 sync。
+  final Map<int, String> _pendingNotesByLocalId = {};
+
   /// 双击起飞。乐观更新：立刻本地插入一条 record(返回给调用方进行 UI 反馈)，
   /// 云端同步放到后台，不阻塞前台交互。
   Future<FlightRecord> takeOff() async {
@@ -224,12 +229,26 @@ class AppState extends GetxController {
     return record;
   }
 
-  /// 后台同步单条记录到服务器。失败仅置 offline=true(记录已在本地)。
+  /// 后台同步单条记录到服务器。成功后将 serverId 写回 record，
+  /// 顺带补发用户在 sync 完成前设的 pending note。
   Future<void> _syncRecordToCloud(FlightRecord local) async {
     try {
-      await api.addRecord(local.time, '');
-      // 同步成功可选：静默 re-fetch 对账 id（不 await，不阻塞）
-      // 这里暂时不动本地记录 — 后续 dashboard 刷新会拉到服务器的真实 id
+      final serverId = await api.addRecord(local.time, '');
+      // 在 records 里找到那条 local-id 的记录，写上 serverId
+      final idx = records.indexWhere((r) => r.id == local.id);
+      if (idx >= 0) {
+        final old = records[idx];
+        final synced = old.copyWith(serverId: serverId);
+        records[idx] = synced;
+        // fire-and-forget 持久化
+        store.setLocalRecords(records);
+
+        // 如果用户在 sync 期间已经加了备注，补发 PUT
+        final pendingNote = _pendingNotesByLocalId.remove(local.id);
+        if (pendingNote != null && pendingNote != synced.note) {
+          unawaited(_syncNoteToCloud(serverId, synced.time, pendingNote));
+        }
+      }
     } on ApiException catch (e) {
       if (e.statusCode != null && e.statusCode! >= 500) {
         offline.value = true;
@@ -252,38 +271,42 @@ class AppState extends GetxController {
     return r;
   }
 
+  /// 设置最后一条记录的备注。乐观更新：本地立刻更新 + 立即返回，
+  /// 云端同步放到后台，不阻塞 overlay 关闭。
   Future<void> setLastRecordNote(String note) async {
     if (records.isEmpty) return;
-    final last = records.last;
-    if (isLocalMode.value) {
-      _updateRecordLocal(records.length - 1, last.time, note);
-      return;
-    }
-    try {
-      await api.updateRecord(last.id, last.time, note);
-      await refreshAll();
-    } on ApiException catch (e) {
-      if (e.statusCode != null && e.statusCode! >= 500) {
-        offline.value = true;
-        _updateRecordLocal(records.length - 1, last.time, note);
-        return;
-      }
-      rethrow;
-    } catch (_) {
-      offline.value = true;
-      _updateRecordLocal(records.length - 1, last.time, note);
+    final idx = records.length - 1;
+    final last = records[idx];
+
+    // 1. 本地先更新
+    _updateRecordLocal(idx, note);
+
+    // 2. 后台同步到服务器
+    if (isLocalMode.value) return;
+    if (last.serverId != null) {
+      // 早已同步过，直接 PUT
+      unawaited(_syncNoteToCloud(last.serverId!, last.time, note));
+    } else {
+      // 还没 sync 完成 —— 记录下来，等 [_syncRecordToCloud] 拿到 serverId 后补发
+      _pendingNotesByLocalId[last.id] = note;
     }
   }
 
-  void _updateRecordLocal(int idx, DateTime time, String note) {
+  Future<void> _syncNoteToCloud(int serverRecordId, DateTime time, String note) async {
+    try {
+      await api.updateRecord(serverRecordId, time, note);
+    } on ApiException catch (e) {
+      if (e.statusCode != null && e.statusCode! >= 500) {
+        offline.value = true;
+      }
+    } catch (_) {
+      offline.value = true;
+    }
+  }
+
+  void _updateRecordLocal(int idx, String note) {
     final r = records[idx];
-    records[idx] = FlightRecord(
-      id: r.id,
-      userId: r.userId,
-      time: time,
-      note: note,
-      createdAt: r.createdAt,
-    );
+    records[idx] = r.copyWith(note: note);
     store.setLocalRecords(records);
   }
 
@@ -375,25 +398,29 @@ class AppState extends GetxController {
   }
 
   // ====== 单条记录 ======
+  /// [id] 可以是本地 id 或 serverId(_edit_record_modal 那边可能拿不到 serverId)
   Future<void> updateRecord(int id, DateTime time, String note) async {
-    final idx = records.indexWhere((r) => r.id == id);
+    // 先按 serverId 找，没找到再按本地 id 找
+    var idx = records.indexWhere((r) => r.serverId == id);
+    idx = idx >= 0 ? idx : records.indexWhere((r) => r.id == id);
     if (isLocalMode.value) {
-      if (idx != -1) _updateRecordLocal(idx, time, note);
+      if (idx != -1) _updateRecordLocal(idx, note);
       return;
     }
+    final targetId = idx >= 0 ? (records[idx].serverId ?? records[idx].id) : id;
     try {
-      await api.updateRecord(id, time, note);
+      await api.updateRecord(targetId, time, note);
       await refreshAll();
     } on ApiException catch (e) {
       if (e.statusCode != null && e.statusCode! >= 500) {
         offline.value = true;
-        if (idx != -1) _updateRecordLocal(idx, time, note);
+        if (idx != -1) _updateRecordLocal(idx, note);
         return;
       }
       rethrow;
     } catch (_) {
       offline.value = true;
-      if (idx != -1) _updateRecordLocal(idx, time, note);
+      if (idx != -1) _updateRecordLocal(idx, note);
     }
   }
 

@@ -8,6 +8,7 @@ import '../models/user.dart';
 /// 本地存储：本地模式 + 持久 token
 class LocalStore {
   static const _kToken = 'token';
+  static const _kRefreshToken = 'refreshToken';
   static const _kUser = 'user';
   static const _kLocalMode = 'localMode';
   static const _kLocalRecords = 'localRecords';
@@ -31,6 +32,15 @@ class LocalStore {
       await _prefs.remove(_kToken);
     } else {
       await _prefs.setString(_kToken, t);
+    }
+  }
+
+  String? getRefreshToken() => _prefs.getString(_kRefreshToken);
+  Future<void> setRefreshToken(String? t) async {
+    if (t == null) {
+      await _prefs.remove(_kRefreshToken);
+    } else {
+      await _prefs.setString(_kRefreshToken, t);
     }
   }
 

@@ -15,6 +15,9 @@ import java.util.Objects;
 @Table(name = "users")
 public class User {
 
+    public static final String ROLE_USER = "USER";
+    public static final String ROLE_ADMIN = "ADMIN";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,6 +34,9 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(nullable = false, length = 20)
+    private String role = ROLE_USER;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -38,16 +44,24 @@ public class User {
     }
 
     public User(String account, String nickname, String avatar, String passwordHash) {
+        this(account, nickname, avatar, passwordHash, ROLE_USER);
+    }
+
+    public User(String account, String nickname, String avatar, String passwordHash, String role) {
         this.account = account;
         this.nickname = nickname;
         this.avatar = avatar;
         this.passwordHash = passwordHash;
+        this.role = role == null ? ROLE_USER : role;
     }
 
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
             createdAt = Instant.now();
+        }
+        if (role == null || role.isBlank()) {
+            role = ROLE_USER;
         }
     }
 
@@ -65,6 +79,9 @@ public class User {
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

@@ -2,7 +2,9 @@ package com.cle2333.flightattendance.config;
 
 import com.cle2333.flightattendance.dto.ApiResponse;
 import com.cle2333.flightattendance.security.JwtAuthenticationFilter;
+import com.cle2333.flightattendance.security.RateLimitFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,13 +24,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableConfigurationProperties(AppProperties.class)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
+    private final RateLimitFilter rateLimitFilter;
+    private final AppProperties props;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter,
+                          RateLimitFilter rateLimitFilter,
+                          AppProperties props) {
         this.jwtFilter = jwtFilter;
+        this.rateLimitFilter = rateLimitFilter;
+        this.props = props;
     }
 
     @Bean
@@ -39,23 +48,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 关闭 CSRF —— 我们是纯 REST + JWT
             .csrf(AbstractHttpConfigurer::disable)
-            // CORS（具体跨域规则见下面的 CorsConfigurationSource bean）
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 无状态 session
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 注册自定义 JWT 过滤器
+            // 限流要在 JWT 之前 —— 拒绝无效请求别浪费 JWT 解析
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                    // 健康检查 + 公开 auth
                     .requestMatchers(HttpMethod.GET, "/api/test").permitAll()
+                    // 公开 auth：register / login / refresh / logout
                     .requestMatchers("/api/auth/**").permitAll()
-                    // 旧版 admin 接口全裸奔（与原 Node.js 后端行为一致 —— 见 README 安全说明）
-                    .requestMatchers("/api/admin/**").permitAll()
-                    // 静态资源 / favicon
+                    // 🔴 leaderboard 是公开读 —— 比名字里带 "admin" 更合适是移到 /api/leaderboard
+                    //    但先保住 Flutter 排行榜功能不断
+                    .requestMatchers(HttpMethod.GET, "/api/admin/leaderboard").permitAll()
+                    // 🔴 admin 鉴权 —— 上线前必改
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
                     .requestMatchers("/", "/favicon.ico", "/assets/**", "/static/**").permitAll()
-                    // 其他 /api/** 需要 JWT
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().permitAll()
             )
@@ -79,7 +87,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOriginPatterns(List.of("*"));
+        // 🔴 白名单来自配置，不写死 "*"
+        cfg.setAllowedOrigins(props.getCors().getAllowedOrigins());
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setExposedHeaders(List.of("Authorization"));
