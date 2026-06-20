@@ -239,15 +239,15 @@ jobs:
 
       - name: Zip bundle
         shell: pwsh
-        working-directory: app/build/windows/runner/Release
+        working-directory: app/build/windows/x64/runner/Release
         run: |
-          Compress-Archive -Path ./* -DestinationPath ../../../../x64/Release/flight-attendance-app-windows-x64.zip
+          Compress-Archive -Path ./* -DestinationPath ../../flight-attendance-app-windows-x64.zip
 
       - name: Upload Windows archive
         uses: actions/upload-artifact@v4
         with:
           name: app-windows
-          path: app/build/windows/x64/Release/flight-attendance-app-windows-x64.zip
+          path: app/build/windows/x64/runner/Release/flight-attendance-app-windows-x64.zip
           if-no-files-found: error
           retention-days: 30
 
