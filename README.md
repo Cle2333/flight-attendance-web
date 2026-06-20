@@ -204,6 +204,11 @@ java -jar target/flight-attendance-server.jar --spring.profiles.active=prod
 | `test` | 集成测试 | H2 内存 | ❌（自动建表） |
 | `h2` | 本机没装 MariaDB 的备胎 | H2 文件（重启保留） | ❌（自动建表） |
 
+application-prod.yml 里 ddl-auto: validate 是生产最安全的设置（不改 schema，只校验）。如果你以后改字段名/类型，记得：
+
+    写新的 Flyway 迁移（V4__xxx.sql）改 DB
+    同步改实体
+    启动时 validate 会先跑迁移再校验新实体，不会炸
 
 
 ## 构建 / CI
